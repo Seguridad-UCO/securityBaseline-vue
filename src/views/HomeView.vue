@@ -37,6 +37,13 @@ const cards = computed(() => [
     description: "Quién tiene qué rol, y desde cuándo.",
   },
   {
+    id: "profiles",
+    label: "Perfiles",
+    count: catalogs.profiles.length,
+    icon: "layers",
+    description: "Agrupa varios roles para asignarlos juntos.",
+  },
+  {
     id: "tenants",
     label: "Tenants",
     count: catalogs.tenants.length,

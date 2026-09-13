@@ -2,7 +2,7 @@
 import { computed, provide, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 import { getApiBaseUrl } from "../api";
-import type { Role } from "../api/contracts";
+import type { Profile, Role } from "../api/contracts";
 import { useCatalogsStore } from "../stores/catalogs";
 import { useSessionStore } from "../stores/session";
 import { modules } from "../router/modules";
@@ -11,12 +11,17 @@ import type { DialogKind } from "../composables/useDialogs";
 import Icon from "./Icon.vue";
 import Alert from "./Alert.vue";
 import EntityModal from "./EntityModal.vue";
+import CredentialRevealModal from "./CredentialRevealModal.vue";
 const catalogs = useCatalogsStore(),
   session = useSessionStore(),
   route = useRoute();
 defineEmits<{ signOut: [] }>();
 const modal = ref<DialogKind | null>(null),
-  grantFor = ref<Role | null>(null);
+  grantFor = ref<Role | null>(null),
+  profileGrantFor = ref<Profile | null>(null);
+const credentialReveal = ref<{ name: string; credential: string } | null>(
+  null,
+);
 const current = computed(
   () => modules.find((module) => module.id === route.name) ?? modules[0],
 );
@@ -31,16 +36,25 @@ function open(kind: DialogKind) {
       "Primero registra un rol para poder asignarlo a un usuario.";
     return;
   }
+  if (kind === "profileAssignment" && !catalogs.profiles.length) {
+    catalogs.error =
+      "Primero define un perfil para poder asignarlo a un usuario.";
+    return;
+  }
   modal.value = kind;
 }
 function close() {
   modal.value = null;
   grantFor.value = null;
+  profileGrantFor.value = null;
 }
 provide(dialogsKey, {
   open,
   grant: (role) => {
     grantFor.value = role;
+  },
+  grantProfile: (profile) => {
+    profileGrantFor.value = profile;
   },
 });
 const kinds: Record<string, DialogKind> = {
@@ -49,10 +63,18 @@ const kinds: Record<string, DialogKind> = {
   roles: "role",
   assignments: "assignment",
   tenants: "tenant",
+  profiles: "profile",
+  profileAssignments: "profileAssignment",
 };
 function openCurrent() {
   const kind = kinds[current.value.id];
   if (kind) open(kind);
+}
+function currentModalKind(): DialogKind | "grant" | "profileGrant" | null {
+  if (modal.value) return modal.value;
+  if (grantFor.value) return "grant";
+  if (profileGrantFor.value) return "profileGrant";
+  return null;
 }
 watch(() => route.path, close);
 </script>
@@ -140,10 +162,17 @@ watch(() => route.path, close);
       </div>
     </section>
     <EntityModal
-      v-if="modal || grantFor"
-      :kind="modal ?? 'grant'"
+      v-if="modal || grantFor || profileGrantFor"
+      :kind="currentModalKind()!"
       :role="grantFor"
+      :profile="profileGrantFor"
       @close="close"
+      @credential="credentialReveal = $event"
+    />
+    <CredentialRevealModal
+      v-if="credentialReveal"
+      :reveal="credentialReveal"
+      @close="credentialReveal = null"
     />
   </main>
 </template>

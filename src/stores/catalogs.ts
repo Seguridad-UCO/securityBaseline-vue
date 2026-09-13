@@ -6,6 +6,8 @@ import type {
   Page,
   PageParams,
   Application,
+  Profile,
+  ProfileAssignment,
   Resource,
   Tenant,
   User,
@@ -33,6 +35,11 @@ export const useCatalogsStore = defineStore("catalogs", () => {
   const users = ref<User[]>([]),
     roles = ref<Role[]>([]),
     assignments = ref<Assignment[]>([]);
+  const profiles = ref<Profile[]>([]);
+  // El PDP todavía no expone una consulta de asignaciones de perfil (HU-011): esta lista no la
+  // toca `refresh()` — solo crece con lo que se asigna en esta sesión del navegador, y se pierde
+  // al recargar la página. Ver ProfileAssignment en api/contracts.ts.
+  const profileAssignments = ref<ProfileAssignment[]>([]);
   const loading = ref(false),
     error = ref(""),
     notice = ref("");
@@ -51,14 +58,14 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     pending = (async () => {
       while (dirty && current === generation) {
         dirty = false;
-        const [nextApps, nextTenants, nextUsers, nextRoles] = await Promise.all(
-          [
+        const [nextApps, nextTenants, nextUsers, nextRoles, nextProfiles] =
+          await Promise.all([
             allPages(api.listApplications),
             api.listTenants(),
             api.listUsers(),
             allPages(api.listRoles),
-          ],
-        );
+            allPages(api.listProfiles),
+          ]);
         const [nextResources, nextAssignments] = await Promise.all([
           Promise.all(
             nextApps.map(async (application) =>
@@ -81,6 +88,7 @@ export const useCatalogsStore = defineStore("catalogs", () => {
         tenants.value = nextTenants.data;
         users.value = nextUsers.data;
         roles.value = nextRoles;
+        profiles.value = nextProfiles;
         resources.value = nextResources.flat();
         assignments.value = nextAssignments.flat();
         error.value = "";
@@ -107,6 +115,22 @@ export const useCatalogsStore = defineStore("catalogs", () => {
       /* error is rendered by the layout */
     });
   }
+  // La asignación de perfil (HU-011) no tiene endpoint de consulta: se recuerda a mano, con el
+  // nombre del perfil resuelto una vez porque el propio recurso no lo trae.
+  function recordProfileAssignment(assignment: ProfileAssignment) {
+    const profile = profiles.value.find((item) => item.id === assignment.profileId);
+    profileAssignments.value = [
+      ...profileAssignments.value,
+      { ...assignment, profileName: profile?.name ?? assignment.profileId },
+    ];
+  }
+  function markProfileAssignmentRevoked(profileAssignmentId: string) {
+    profileAssignments.value = profileAssignments.value.map((item) =>
+      item.id === profileAssignmentId
+        ? { ...item, validUntil: new Date().toISOString() }
+        : item,
+    );
+  }
   function clear() {
     generation++;
     pending = undefined;
@@ -118,6 +142,8 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     users.value = [];
     roles.value = [];
     assignments.value = [];
+    profiles.value = [];
+    profileAssignments.value = [];
     error.value = "";
     notice.value = "";
   }
@@ -128,12 +154,16 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     users,
     roles,
     assignments,
+    profiles,
+    profileAssignments,
     loading,
     error,
     notice,
     appById,
     refresh,
     reload,
+    recordProfileAssignment,
+    markProfileAssignmentRevoked,
     clear,
   };
 });

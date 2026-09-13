@@ -9,6 +9,11 @@ import type {
   Decision,
   Page,
   PageParams,
+  Profile,
+  ProfileAssignment,
+  ProfileAssignmentInput,
+  ProfileInput,
+  RegisteredApplication,
   Resource,
   ResourceInput,
   Role,
@@ -46,8 +51,12 @@ export const listApplications = (params?: PageParams) =>
   request<ApiResponse<Page<Application>>>(
     `/api/v1/applications${query(params)}`,
   );
+// El registro (HU-012) devuelve el secreto en texto plano una sola vez.
 export const createApplication = (data: ApplicationInput) =>
-  request<ApiResponse<Application>>("/api/v1/applications", body("POST", data));
+  request<ApiResponse<RegisteredApplication>>(
+    "/api/v1/applications",
+    body("POST", data),
+  );
 export const listResources = (applicationId: string) =>
   request<ApiResponse<Resource[]>>(
     `/api/v1/applications/${id(applicationId)}/resources`,
@@ -91,3 +100,28 @@ export const revokeAssignment = (roleId: string, assignmentId: string) =>
   });
 export const authorize = (data: AuthorizationInput) =>
   request<ApiResponse<Decision>>("/api/v1/authorize", body("POST", data));
+// Perfiles (HU-011).
+export const listProfiles = (params?: PageParams) =>
+  request<ApiResponse<Page<Profile>>>(`/api/v1/profiles${query(params)}`);
+export const createProfile = (data: ProfileInput) =>
+  request<ApiResponse<Profile>>("/api/v1/profiles", body("POST", data));
+export const addRoleToProfile = (profileId: string, roleId: string) =>
+  request<ApiResponse<Profile>>(
+    `/api/v1/profiles/${id(profileId)}/roles`,
+    body("POST", { roleId }),
+  );
+// Asignación de perfiles: materializa una asignación de rol por cada rol que el perfil agrupa. No
+// hay endpoint de consulta todavía — solo alta y revocación (ver ProfileAssignment en contracts.ts).
+export const assignProfile = (profileId: string, data: ProfileAssignmentInput) =>
+  request<ApiResponse<ProfileAssignment>>(
+    `/api/v1/profiles/${id(profileId)}/assignments`,
+    body("POST", data),
+  );
+export const revokeProfileAssignment = (
+  profileId: string,
+  profileAssignmentId: string,
+) =>
+  request<null>(
+    `/api/v1/profiles/${id(profileId)}/assignments/${id(profileAssignmentId)}`,
+    { method: "DELETE" },
+  );

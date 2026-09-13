@@ -44,6 +44,25 @@ export const modules = [
     action: "Asignar rol",
   },
   {
+    id: "profiles",
+    path: "/perfiles",
+    label: "Perfiles",
+    icon: "layers",
+    title: "Perfiles",
+    description: "Agrupan varios roles para asignarlos de una sola vez",
+    action: "Definir perfil",
+  },
+  {
+    id: "profileAssignments",
+    path: "/asignaciones-de-perfil",
+    label: "Asig. de perfiles",
+    icon: "link",
+    title: "Asignaciones de perfil",
+    description:
+      "Qué perfil tiene cada usuario, en qué aplicación (solo esta sesión)",
+    action: "Asignar perfil",
+  },
+  {
     id: "authorize",
     path: "/autorizacion",
     label: "Probar acceso",

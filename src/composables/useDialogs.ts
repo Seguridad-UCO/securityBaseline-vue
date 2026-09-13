@@ -1,11 +1,18 @@
 import { inject } from "vue";
 import type { InjectionKey } from "vue";
-import type { Role } from "../api/contracts";
+import type { Profile, Role } from "../api/contracts";
 export type DialogKind =
-  "application" | "resource" | "role" | "assignment" | "tenant";
+  | "application"
+  | "resource"
+  | "role"
+  | "assignment"
+  | "tenant"
+  | "profile"
+  | "profileAssignment";
 export interface Dialogs {
   open: (kind: DialogKind) => void;
   grant: (role: Role) => void;
+  grantProfile: (profile: Profile) => void;
 }
 export const dialogsKey: InjectionKey<Dialogs> = Symbol("dialogs");
 export function useDialogs(): Dialogs {

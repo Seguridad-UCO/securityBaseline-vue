@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
 import * as api from "../api";
-import type { HttpMethod, Role } from "../api/contracts";
+import type { HttpMethod, Profile, Role } from "../api/contracts";
 import type { DialogKind } from "../composables/useDialogs";
 import { useMutation } from "../composables/useMutation";
 import { useCatalogsStore } from "../stores/catalogs";
 import Modal from "./Modal.vue";
 import MethodChoice from "./MethodChoice.vue";
-const props = defineProps<{ kind: DialogKind | "grant"; role: Role | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{
+  kind: DialogKind | "grant" | "profileGrant";
+  role: Role | null;
+  profile: Profile | null;
+}>();
+const emit = defineEmits<{
+  close: [];
+  credential: [payload: { name: string; credential: string }];
+}>();
 const catalogs = useCatalogsStore();
 const { busy, error, saved, run } = useMutation();
 const form = reactive({
@@ -21,6 +28,7 @@ const form = reactive({
   scope: "APPLICATION" as "APPLICATION" | "TENANT",
   applicationId: catalogs.apps[0]?.id ?? "",
   roleId: catalogs.roles[0]?.id ?? "",
+  profileId: catalogs.profiles[0]?.id ?? "",
   userId: catalogs.users[0]?.id ?? "",
   resourceId: "",
 });
@@ -39,6 +47,14 @@ watch(
   },
   { immediate: true },
 );
+// Registrar la aplicación (HU-012) y asignar un perfil devuelven algo que el flujo genérico de
+// `run()` no expone: el secreto en texto plano, y la asignación materializada respectivamente. Se
+// capturan aquí, fuera de `run()`, y solo se usan tras un éxito confirmado — si `run()` reintenta
+// solo la recarga (el registro ya se guardó), el valor capturado en el primer intento sigue vigente.
+let registeredCredential: { name: string; credential: string } | null = null;
+let newProfileAssignment: Awaited<
+  ReturnType<typeof api.assignProfile>
+>["data"] | null = null;
 const copy = computed(
   () =>
     ({
@@ -67,21 +83,38 @@ const copy = computed(
         "El usuario tendrá este rol vigente en la aplicación elegida, desde ahora.",
         "Rol asignado correctamente.",
       ],
+      profile: [
+        "Definir perfil",
+        "El alcance global todavía no se administra por este canal — solo tenant o aplicación.",
+        "Perfil definido correctamente.",
+      ],
+      profileAssignment: [
+        "Asignar perfil",
+        "El usuario recibirá una asignación por cada rol que agrupa el perfil, en la aplicación elegida.",
+        "Perfil asignado correctamente.",
+      ],
       grant: [
         `Conceder recurso a "${props.role?.name}"`,
         "El rol podrá autorizar peticiones contra este recurso protegido.",
         "Recurso concedido al rol correctamente.",
       ],
+      profileGrant: [
+        `Agregar rol a "${props.profile?.name}"`,
+        "El perfil agrupará este rol: al asignar el perfil, este rol se asigna también.",
+        "Rol agregado al perfil correctamente.",
+      ],
     })[props.kind],
 );
 async function submit() {
-  const actions: Record<DialogKind | "grant", () => Promise<unknown>> = {
-    application: () =>
-      api.createApplication({
+  const actions: Record<DialogKind | "grant" | "profileGrant", () => Promise<unknown>> = {
+    application: async () => {
+      const result = await api.createApplication({
         name: form.name,
         description: form.description,
         baseUrl: form.baseUrl,
-      }),
+      });
+      registeredCredential = { name: form.name, credential: result.data.credential };
+    },
     resource: () =>
       api.createResource(form.applicationId, {
         path: form.path,
@@ -99,16 +132,41 @@ async function submit() {
         userId: form.userId,
         applicationId: form.applicationId,
       }),
+    profile: () =>
+      api.createProfile({
+        name: form.name,
+        scope: form.scope,
+        applicationId: form.scope === "APPLICATION" ? form.applicationId : "",
+      }),
+    profileAssignment: async () => {
+      const result = await api.assignProfile(form.profileId, {
+        userId: form.userId,
+        applicationId: form.applicationId,
+      });
+      newProfileAssignment = result.data;
+    },
     grant: () => api.grantResourceToRole(props.role!.id, form.resourceId),
+    profileGrant: () => api.addRoleToProfile(props.profile!.id, form.roleId),
   };
-  if (await run(actions[props.kind], copy.value[2]!)) emit("close");
+  if (await run(actions[props.kind], copy.value[2]!)) {
+    if (registeredCredential) emit("credential", registeredCredential);
+    if (newProfileAssignment)
+      catalogs.recordProfileAssignment(newProfileAssignment);
+    emit("close");
+  }
 }
 </script>
 <template>
   <Modal
     :title="copy[0]!"
     :description="copy[1]!"
-    :submit-label="kind === 'grant' ? 'Conceder recurso' : copy[0]!"
+    :submit-label="
+      kind === 'grant'
+        ? 'Conceder recurso'
+        : kind === 'profileGrant'
+          ? 'Agregar rol'
+          : copy[0]!
+    "
     :error="error"
     :busy="busy"
     :saved="saved"
@@ -146,12 +204,14 @@ async function submit() {
           required
           placeholder="Facultad de Ingeniería" /></label
     ></template>
-    <template v-if="kind === 'role'"
+    <template v-if="kind === 'role' || kind === 'profile'"
       ><label
-        >Nombre del rol<input
+        >Nombre {{ kind === "role" ? "del rol" : "del perfil" }}<input
           v-model="form.name"
           required
-          placeholder="Administrador académico"
+          :placeholder="
+            kind === 'role' ? 'Administrador académico' : 'Coordinador académico'
+          "
       /></label>
       <div class="method-choice">
         <span>Alcance</span>
@@ -183,26 +243,37 @@ async function submit() {
             {{ role.name }}
           </option>
         </select></label
+      ></template
+    >
+    <template v-if="kind === 'profileAssignment'"
       ><label
-        >Usuario<select v-model="form.userId" required>
-          <option v-if="!catalogs.users.length" value="">
-            Sin usuarios todavía
-          </option>
+        >Perfil<select v-model="form.profileId" required>
           <option
-            v-for="user in catalogs.users"
-            :key="user.id"
-            :value="user.id"
+            v-for="profile in catalogs.profiles"
+            :key="profile.id"
+            :value="profile.id"
           >
-            {{ user.name || user.email }}
+            {{ profile.name }}
           </option>
         </select></label
       ></template
+    >
+    <label v-if="kind === 'assignment' || kind === 'profileAssignment'"
+      >Usuario<select v-model="form.userId" required>
+        <option v-if="!catalogs.users.length" value="">
+          Sin usuarios todavía
+        </option>
+        <option v-for="user in catalogs.users" :key="user.id" :value="user.id">
+          {{ user.name || user.email }}
+        </option>
+      </select></label
     >
     <label
       v-if="
         kind === 'resource' ||
         kind === 'assignment' ||
-        (kind === 'role' && form.scope === 'APPLICATION')
+        kind === 'profileAssignment' ||
+        ((kind === 'role' || kind === 'profile') && form.scope === 'APPLICATION')
       "
       >Aplicación<select v-model="form.applicationId" required>
         <option v-if="!catalogs.apps.length" value="">
@@ -231,6 +302,16 @@ async function submit() {
           :value="resource.id"
         >
           {{ resource.method }} {{ resource.path }}
+        </option>
+      </select></label
+    >
+    <label v-if="kind === 'profileGrant'"
+      >Rol<select v-model="form.roleId" required>
+        <option v-if="!catalogs.roles.length" value="">
+          Define un rol primero
+        </option>
+        <option v-for="role in catalogs.roles" :key="role.id" :value="role.id">
+          {{ role.name }}
         </option>
       </select></label
     >
