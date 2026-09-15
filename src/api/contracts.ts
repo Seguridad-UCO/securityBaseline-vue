@@ -91,6 +91,7 @@ export interface Assignment extends AssignmentInput {
   validFrom: string;
   validUntil: string | null;
   role?: Role;
+  user?: User;
 }
 export interface AuthorizationInput {
   applicationId: string;
@@ -124,8 +125,6 @@ export interface ProfileAssignmentInput {
   userId: string;
   applicationId: string;
 }
-// El PDP no expone todavía una consulta de asignaciones de perfil: esta lista solo existe en la
-// sesión del navegador, con lo que se creó desde que se abrió la página — no sobrevive a un refresh.
 export interface ProfileAssignment extends ProfileAssignmentInput {
   id: string;
   tenantId: string;
@@ -133,5 +132,6 @@ export interface ProfileAssignment extends ProfileAssignmentInput {
   generatedAssignmentIds: string[];
   validFrom: string;
   validUntil: string | null;
-  profileName?: string;
+  profile?: Profile;
+  user?: User;
 }

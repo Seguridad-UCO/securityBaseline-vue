@@ -47,14 +47,11 @@ watch(
   },
   { immediate: true },
 );
-// Registrar la aplicación (HU-012) y asignar un perfil devuelven algo que el flujo genérico de
-// `run()` no expone: el secreto en texto plano, y la asignación materializada respectivamente. Se
-// capturan aquí, fuera de `run()`, y solo se usan tras un éxito confirmado — si `run()` reintenta
-// solo la recarga (el registro ya se guardó), el valor capturado en el primer intento sigue vigente.
+// Registrar la aplicación (HU-012) devuelve algo que el flujo genérico de `run()` no expone: el
+// secreto en texto plano. Se captura aquí, fuera de `run()`, y solo se usa tras un éxito confirmado
+// — si `run()` reintenta solo la recarga (el registro ya se guardó), el valor capturado en el
+// primer intento sigue vigente.
 let registeredCredential: { name: string; credential: string } | null = null;
-let newProfileAssignment: Awaited<
-  ReturnType<typeof api.assignProfile>
->["data"] | null = null;
 const copy = computed(
   () =>
     ({
@@ -138,20 +135,16 @@ async function submit() {
         scope: form.scope,
         applicationId: form.scope === "APPLICATION" ? form.applicationId : "",
       }),
-    profileAssignment: async () => {
-      const result = await api.assignProfile(form.profileId, {
+    profileAssignment: () =>
+      api.assignProfile(form.profileId, {
         userId: form.userId,
         applicationId: form.applicationId,
-      });
-      newProfileAssignment = result.data;
-    },
+      }),
     grant: () => api.grantResourceToRole(props.role!.id, form.resourceId),
     profileGrant: () => api.addRoleToProfile(props.profile!.id, form.roleId),
   };
   if (await run(actions[props.kind], copy.value[2]!)) {
     if (registeredCredential) emit("credential", registeredCredential);
-    if (newProfileAssignment)
-      catalogs.recordProfileAssignment(newProfileAssignment);
     emit("close");
   }
 }
