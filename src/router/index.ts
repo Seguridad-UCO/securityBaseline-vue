@@ -33,6 +33,10 @@ router.beforeEach(async (to) => {
   if (!session.initialized) await session.refresh();
   if (to.meta.protected && session.status !== "authenticated")
     return { name: "login", query: { redirect: to.fullPath } };
+  if (to.name === "login" && session.status === "authenticated" && typeof to.query.returnTo === "string") {
+    session.beginSignIn();
+    return false;
+  }
   if (to.name === "login" && session.status === "authenticated")
     return { name: "home" };
 });

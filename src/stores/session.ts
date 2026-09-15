@@ -64,7 +64,8 @@ export const useSessionStore = defineStore("session", () => {
   function beginSignIn() {
     status.value = "loading";
     error.value = "";
-    startKeycloakLogin();
+    const returnTo = new URL(window.location.href).searchParams.get("returnTo");
+    startKeycloakLogin(returnTo ?? undefined);
   }
   function beginSignUp() {
     status.value = "loading";
