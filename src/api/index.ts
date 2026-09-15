@@ -39,8 +39,12 @@ const body = (method: string, data: unknown): RequestInit => ({
 export const getApiBaseUrl = () => API_BASE_URL;
 export const getSession = () =>
   request<ApiResponse<Session>>("/api/v1/session");
-export const startKeycloakLogin = () =>
-  window.location.assign(`${API_BASE_URL}/oauth2/authorization/keycloak`);
+export const startKeycloakLogin = (returnTo?: string) => {
+  const query = returnTo
+    ? `?return_to=${encodeURIComponent(returnTo)}`
+    : "";
+  window.location.assign(`${API_BASE_URL}/oauth2/authorization/keycloak${query}`);
+};
 export const startKeycloakRegistration = () =>
   window.location.assign(
     `${API_BASE_URL}/oauth2/authorization/keycloak/register`,
