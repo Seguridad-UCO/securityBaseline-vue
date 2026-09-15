@@ -7,6 +7,11 @@ import Icon from "../components/Icon.vue";
 const catalogs = useCatalogsStore(),
   session = useSessionStore(),
   router = useRouter();
+const activeTenantName = computed(
+  () =>
+    catalogs.tenants.find((tenant) => tenant.code === session.profile?.tenantId)
+      ?.name ?? session.profile?.tenantId,
+);
 const cards = computed(() => [
   {
     id: "applications",
@@ -63,7 +68,7 @@ const cards = computed(() => [
   <section class="welcome-panel">
     <div>
       <p class="eyebrow">
-        TENANT ACTIVO · {{ session.profile?.tenantId || "universidad-uco" }}
+        TENANT ACTIVO · {{ activeTenantName }}
       </p>
       <h2>
         Hola, {{ session.userName.split(" ")[0] }}.<br /><em

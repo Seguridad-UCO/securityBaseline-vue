@@ -36,9 +36,6 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     roles = ref<Role[]>([]),
     assignments = ref<Assignment[]>([]);
   const profiles = ref<Profile[]>([]);
-  // El PDP todavía no expone una consulta de asignaciones de perfil (HU-011): esta lista no la
-  // toca `refresh()` — solo crece con lo que se asigna en esta sesión del navegador, y se pierde
-  // al recargar la página. Ver ProfileAssignment en api/contracts.ts.
   const profileAssignments = ref<ProfileAssignment[]>([]);
   const loading = ref(false),
     error = ref(""),
@@ -66,22 +63,42 @@ export const useCatalogsStore = defineStore("catalogs", () => {
             allPages(api.listRoles),
             allPages(api.listProfiles),
           ]);
-        const [nextResources, nextAssignments] = await Promise.all([
-          Promise.all(
-            nextApps.map(async (application) =>
-              (await api.listResources(application.id)).data.map(
-                (resource) => ({ ...resource, application }),
+        const userById = (userId: string) =>
+          nextUsers.data.find((user) => user.id === userId);
+        const [nextResources, nextAssignments, nextProfileAssignments] =
+          await Promise.all([
+            Promise.all(
+              nextApps.map(async (application) =>
+                (await api.listResources(application.id)).data.map(
+                  (resource) => ({ ...resource, application }),
+                ),
               ),
             ),
-          ),
-          Promise.all(
-            nextRoles.map(async (role) =>
-              (
-                await allPages((params) => api.listAssignments(role.id, params))
-              ).map((assignment) => ({ ...assignment, role })),
+            Promise.all(
+              nextRoles.map(async (role) =>
+                (
+                  await allPages((params) => api.listAssignments(role.id, params))
+                ).map((assignment) => ({
+                  ...assignment,
+                  role,
+                  user: userById(assignment.userId),
+                })),
+              ),
             ),
-          ),
-        ]);
+            Promise.all(
+              nextProfiles.map(async (profile) =>
+                (
+                  await allPages((params) =>
+                    api.listProfileAssignments(profile.id, params),
+                  )
+                ).map((profileAssignment) => ({
+                  ...profileAssignment,
+                  profile,
+                  user: userById(profileAssignment.userId),
+                })),
+              ),
+            ),
+          ]);
         if (current !== generation) return;
         // Publish a complete snapshot only after all reads succeed.
         apps.value = nextApps;
@@ -91,6 +108,7 @@ export const useCatalogsStore = defineStore("catalogs", () => {
         profiles.value = nextProfiles;
         resources.value = nextResources.flat();
         assignments.value = nextAssignments.flat();
+        profileAssignments.value = nextProfileAssignments.flat();
         error.value = "";
       }
     })()
@@ -114,22 +132,6 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     void refresh().catch(() => {
       /* error is rendered by the layout */
     });
-  }
-  // La asignación de perfil (HU-011) no tiene endpoint de consulta: se recuerda a mano, con el
-  // nombre del perfil resuelto una vez porque el propio recurso no lo trae.
-  function recordProfileAssignment(assignment: ProfileAssignment) {
-    const profile = profiles.value.find((item) => item.id === assignment.profileId);
-    profileAssignments.value = [
-      ...profileAssignments.value,
-      { ...assignment, profileName: profile?.name ?? assignment.profileId },
-    ];
-  }
-  function markProfileAssignmentRevoked(profileAssignmentId: string) {
-    profileAssignments.value = profileAssignments.value.map((item) =>
-      item.id === profileAssignmentId
-        ? { ...item, validUntil: new Date().toISOString() }
-        : item,
-    );
   }
   function clear() {
     generation++;
@@ -162,8 +164,6 @@ export const useCatalogsStore = defineStore("catalogs", () => {
     appById,
     refresh,
     reload,
-    recordProfileAssignment,
-    markProfileAssignmentRevoked,
     clear,
   };
 });

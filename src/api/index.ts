@@ -114,8 +114,7 @@ export const addRoleToProfile = (profileId: string, roleId: string) =>
     `/api/v1/profiles/${id(profileId)}/roles`,
     body("POST", { roleId }),
   );
-// Asignación de perfiles: materializa una asignación de rol por cada rol que el perfil agrupa. No
-// hay endpoint de consulta todavía — solo alta y revocación (ver ProfileAssignment en contracts.ts).
+// Asignación de perfiles: materializa una asignación de rol por cada rol que el perfil agrupa.
 export const assignProfile = (profileId: string, data: ProfileAssignmentInput) =>
   request<ApiResponse<ProfileAssignment>>(
     `/api/v1/profiles/${id(profileId)}/assignments`,
@@ -128,4 +127,8 @@ export const revokeProfileAssignment = (
   request<null>(
     `/api/v1/profiles/${id(profileId)}/assignments/${id(profileAssignmentId)}`,
     { method: "DELETE" },
+  );
+export const listProfileAssignments = (profileId: string, params?: PageParams) =>
+  request<ApiResponse<Page<ProfileAssignment>>>(
+    `/api/v1/profiles/${id(profileId)}/assignments${query(params)}`,
   );

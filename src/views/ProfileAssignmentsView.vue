@@ -13,8 +13,7 @@ const { busy, error, saved, run } = useMutation();
 const retry = ref<(() => Promise<unknown>) | null>(null);
 async function revoke(profileId: string, profileAssignmentId: string) {
   retry.value = () => revokeProfileAssignment(profileId, profileAssignmentId);
-  const ok = await run(retry.value, "Asignación de perfil revocada correctamente.");
-  if (ok) catalogs.markProfileAssignmentRevoked(profileAssignmentId);
+  await run(retry.value, "Asignación de perfil revocada correctamente.");
 }
 </script>
 <template>
@@ -33,7 +32,7 @@ async function revoke(profileId: string, profileAssignmentId: string) {
   ><DataPanel
     title="Asignaciones de perfil"
     :count="catalogs.profileAssignments.length"
-    empty="Asigna el primer perfil a un usuario. El PDP todavía no expone una consulta de asignaciones de perfil — aquí solo se ven las creadas en esta sesión."
+    empty="Asigna el primer perfil a un usuario."
     action-text="Asignar perfil"
     @action="dialogs.open('profileAssignment')"
     ><div class="assignment-table">
@@ -44,9 +43,11 @@ async function revoke(profileId: string, profileAssignmentId: string) {
       >
         <span class="assignment-role"
           ><Icon name="layers" :size="14" />{{
-            assignment.profileName || assignment.profileId
+            assignment.profile?.name || assignment.profileId
           }}</span
-        ><code class="assignment-user">{{ assignment.userId }}</code
+        ><span class="assignment-user">{{
+          assignment.user?.name || assignment.user?.email || assignment.userId
+        }}</span
         ><span class="assignment-since"
           >{{ assignment.generatedAssignmentIds.length }} rol{{
             assignment.generatedAssignmentIds.length === 1 ? "" : "es"
