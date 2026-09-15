@@ -58,8 +58,7 @@ export const modules = [
     label: "Asig. de perfiles",
     icon: "link",
     title: "Asignaciones de perfil",
-    description:
-      "Qué perfil tiene cada usuario, en qué aplicación (solo esta sesión)",
+    description: "Qué perfil tiene cada usuario, en qué aplicación",
     action: "Asignar perfil",
   },
   {
