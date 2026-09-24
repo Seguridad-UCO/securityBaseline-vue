@@ -3,6 +3,7 @@ import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
+import { removeResource } from "../api";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
 </script>
@@ -37,8 +38,9 @@ const catalogs = useCatalogsStore(),
         }}</span
         ><span class="route-state"
           ><Icon name="check" :size="14" /> Protegido</span
-        >
+        ><button class="grant-action" @click="dialogs.editResource(resource)">Editar</button><button class="grant-action danger" @click="dialogs.confirm('Eliminar recurso', 'No se puede eliminar mientras esté asociado a un rol.', () => removeResource(resource.applicationId, resource.id))">Eliminar</button>
       </article>
     </div></DataPanel
   >
 </template>
+<style scoped>.danger { color: var(--red); }</style>

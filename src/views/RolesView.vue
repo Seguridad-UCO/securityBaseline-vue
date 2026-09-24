@@ -3,6 +3,7 @@ import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
+import { removeRole, revokeResourceFromRole } from "../api";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
 </script>
@@ -31,6 +32,12 @@ const catalogs = useCatalogsStore(),
           }}
           autorizado{{ role.resourceIds.length === 1 ? "" : "s" }}
         </p>
+        <div v-if="role.resourceIds.length" class="association-list">
+          <button v-for="resourceId in role.resourceIds" :key="resourceId" class="association-chip"
+            @click="dialogs.confirm('Retirar recurso', 'El recurso dejará de estar asociado a este rol.', () => revokeResourceFromRole(role.id, resourceId))">
+            {{ catalogs.resources.find((resource) => resource.id === resourceId)?.path || resourceId }} <Icon name="close" :size="12" />
+          </button>
+        </div>
         <footer>
           <span>{{
             role.applicationId
@@ -41,9 +48,16 @@ const catalogs = useCatalogsStore(),
           }}</span
           ><button class="grant-action" @click="dialogs.grant(role)">
             <Icon name="plus" :size="13" />Recurso
-          </button>
+          </button><button class="grant-action" @click="dialogs.editRole(role)">Editar</button><button class="grant-action danger" @click="dialogs.confirm('Eliminar rol', 'No se puede eliminar si conserva recursos, perfiles o asignaciones activas.', () => removeRole(role.id))">Eliminar</button>
         </footer>
       </article>
     </div></DataPanel
   >
 </template>
+
+<style scoped>
+.association-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #784140; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono'; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
+.association-chip:hover { background: rgba(185,61,60,.1); color: var(--red); }
+.danger { color: var(--red); }
+</style>

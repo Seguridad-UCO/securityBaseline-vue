@@ -8,6 +8,7 @@ const props = defineProps<{
   error: string;
   busy: boolean;
   saved?: boolean;
+  danger?: boolean;
 }>();
 const emit = defineEmits<{ close: []; submit: [] }>();
 const dialog = ref<HTMLElement>();
@@ -92,7 +93,7 @@ onUnmounted(() => {
               @click="close"
             >
               Cancelar</button
-            ><button class="create-action" type="submit" :disabled="busy">
+            ><button :class="danger ? 'danger-action' : 'create-action'" type="submit" :disabled="busy">
               {{
                 busy
                   ? "Actualizando…"

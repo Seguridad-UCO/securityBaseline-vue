@@ -3,6 +3,7 @@ import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
+import { removeApplication } from "../api";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
 </script>
@@ -20,8 +21,9 @@ const catalogs = useCatalogsStore(),
         <p>{{ app.description }}</p>
         <code>{{ app.baseUrl }}</code>
         <footer>
-          <span>Aplicación protegida</span><Icon name="shield" :size="15" />
+          <span>Aplicación protegida</span><button class="grant-action" @click="dialogs.editApplication(app)">Editar</button><button class="grant-action danger" @click="dialogs.confirm('Eliminar aplicación', 'Se eliminará físicamente cuando no tenga recursos, roles ni perfiles dependientes.', () => removeApplication(app.id))">Eliminar</button><Icon name="shield" :size="15" />
         </footer>
       </article></div
   ></DataPanel>
 </template>
+<style scoped>.danger { color: var(--red); }</style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
 import * as api from "../api";
-import type { HttpMethod, Profile, Role } from "../api/contracts";
+import type { Application, HttpMethod, Profile, Resource, Role } from "../api/contracts";
 import type { DialogKind } from "../composables/useDialogs";
 import { useMutation } from "../composables/useMutation";
 import { useCatalogsStore } from "../stores/catalogs";
@@ -11,12 +11,17 @@ const props = defineProps<{
   kind: DialogKind | "grant" | "profileGrant";
   role: Role | null;
   profile: Profile | null;
+  application: Application | null;
+  resource: Resource | null;
+  editingRole: Role | null;
+  editingProfile: Profile | null;
 }>();
 const emit = defineEmits<{
   close: [];
   credential: [payload: { name: string; credential: string }];
 }>();
 const catalogs = useCatalogsStore();
+const editing = computed(() => !!(props.application || props.resource || props.editingRole || props.editingProfile));
 const { busy, error, saved, run } = useMutation();
 const form = reactive({
   name: "",
@@ -47,6 +52,16 @@ watch(
   },
   { immediate: true },
 );
+watch(() => [props.application, props.resource, props.editingRole, props.editingProfile], () => {
+  const entity = props.application ?? props.resource ?? props.editingRole ?? props.editingProfile;
+  if (!entity) return;
+  form.name = "name" in entity ? entity.name : "";
+  form.description = props.application?.description ?? "";
+  form.baseUrl = props.application?.baseUrl ?? "";
+  form.path = props.resource?.path ?? "";
+  form.method = props.resource?.method ?? "GET";
+  form.applicationId = props.resource?.applicationId ?? props.application?.id ?? props.editingRole?.applicationId ?? props.editingProfile?.applicationId ?? "";
+}, { immediate: true });
 // Registrar la aplicación (HU-012) devuelve algo que el flujo genérico de `run()` no expone: el
 // secreto en texto plano. Se captura aquí, fuera de `run()`, y solo se usa tras un éxito confirmado
 // — si `run()` reintenta solo la recarga (el registro ya se guardó), el valor capturado en el
@@ -54,6 +69,14 @@ watch(
 let registeredCredential: { name: string; credential: string } | null = null;
 const copy = computed(
   () =>
+    editing.value
+      ? ({
+          application: ["Editar aplicación", "Actualiza los datos del servicio protegido.", "Aplicación actualizada correctamente."],
+          resource: ["Editar recurso", "Actualiza el método o la ruta del endpoint protegido.", "Recurso actualizado correctamente."],
+          role: ["Editar rol", "Actualiza el nombre del rol sin cambiar su alcance.", "Rol actualizado correctamente."],
+          profile: ["Editar perfil", "Actualiza el nombre del perfil sin cambiar su alcance.", "Perfil actualizado correctamente."],
+        } as Record<string, string[]>)[props.kind]!
+      :
     ({
       application: [
         "Registrar aplicación",
@@ -105,6 +128,7 @@ const copy = computed(
 async function submit() {
   const actions: Record<DialogKind | "grant" | "profileGrant", () => Promise<unknown>> = {
     application: async () => {
+      if (props.application) return api.updateApplication(props.application.id, { name: form.name, description: form.description, baseUrl: form.baseUrl });
       const result = await api.createApplication({
         name: form.name,
         description: form.description,
@@ -112,14 +136,16 @@ async function submit() {
       });
       registeredCredential = { name: form.name, credential: result.data.credential };
     },
-    resource: () =>
-      api.createResource(form.applicationId, {
+    resource: () => props.resource
+      ? api.updateResource(props.resource.applicationId, props.resource.id, { path: form.path, method: form.method })
+      : api.createResource(form.applicationId, {
         path: form.path,
         method: form.method,
       }),
     tenant: () => api.createTenant({ code: form.code, name: form.name }),
-    role: () =>
-      api.createRole({
+    role: () => props.editingRole
+      ? api.updateRole(props.editingRole.id, form.name)
+      : api.createRole({
         name: form.name,
         scope: form.scope,
         applicationId: form.scope === "APPLICATION" ? form.applicationId : "",
@@ -129,8 +155,9 @@ async function submit() {
         userId: form.userId,
         applicationId: form.applicationId,
       }),
-    profile: () =>
-      api.createProfile({
+    profile: () => props.editingProfile
+      ? api.updateProfile(props.editingProfile.id, form.name)
+      : api.createProfile({
         name: form.name,
         scope: form.scope,
         applicationId: form.scope === "APPLICATION" ? form.applicationId : "",
@@ -206,7 +233,7 @@ async function submit() {
             kind === 'role' ? 'Administrador académico' : 'Coordinador académico'
           "
       /></label>
-      <div class="method-choice">
+      <div v-if="!editing" class="method-choice">
         <span>Alcance</span>
         <div>
           <button
