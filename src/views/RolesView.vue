@@ -60,7 +60,7 @@ const isProtectedRole = (role: Role) =>
 
 <style scoped>
 .association-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #784140; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono'; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
+.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #6c302f; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
 .association-chip:hover { background: rgba(185,61,60,.1); color: var(--red); }
 .danger { color: var(--red); }
 </style>
