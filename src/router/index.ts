@@ -15,6 +15,17 @@ const views = {
   tenants: () => import("../views/TenantsView.vue"),
   users: () => import("../views/UsersView.vue"),
 };
+
+function trustedReturnTarget(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const target = new URL(value);
+    return target.origin === "http://localhost:5174" ? target.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -33,10 +44,10 @@ router.beforeEach(async (to) => {
   if (!session.initialized) await session.refresh();
   if (to.meta.protected && session.status !== "authenticated")
     return { name: "login", query: { redirect: to.fullPath } };
-  if (to.name === "login" && session.status === "authenticated" && typeof to.query.returnTo === "string") {
-    session.beginSignIn();
+  if (to.name === "login" && session.status === "authenticated") {
+    const returnTarget = trustedReturnTarget(to.query.returnTo);
+    if (returnTarget) window.location.assign(returnTarget);
+    else return { name: "home" };
     return false;
   }
-  if (to.name === "login" && session.status === "authenticated")
-    return { name: "home" };
 });
