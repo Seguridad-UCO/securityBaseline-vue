@@ -62,6 +62,14 @@ withDefaults(defineProps<{ name: string; size?: number }>(), { size: 18 });
     <template v-if="name === 'close'">
       <path d="m6 6 12 12M18 6 6 18" />
     </template>
+    <template v-if="name === 'edit'">
+      <path d="m4 20 4.1-.8L19 8.3 15.7 5 4.8 15.9 4 20Z" />
+      <path d="m13.9 6.8 3.3 3.3" />
+    </template>
+    <template v-if="name === 'trash'">
+      <path d="M4 7h16M9 7V4h6v3M7 7l.8 13h8.4L17 7" />
+      <path d="M10 11v5M14 11v5" />
+    </template>
     <template v-if="name === 'layers'">
       <path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z" />
       <path d="m4 12 8 4.5 8-4.5" />

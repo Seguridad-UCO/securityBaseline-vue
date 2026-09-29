@@ -2,7 +2,7 @@
 import { computed, provide, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 import { getApiBaseUrl } from "../api";
-import type { Profile, Role } from "../api/contracts";
+import type { Application, Profile, Resource, Role } from "../api/contracts";
 import { useCatalogsStore } from "../stores/catalogs";
 import { useSessionStore } from "../stores/session";
 import { modules } from "../router/modules";
@@ -12,6 +12,7 @@ import Icon from "./Icon.vue";
 import Alert from "./Alert.vue";
 import EntityModal from "./EntityModal.vue";
 import CredentialRevealModal from "./CredentialRevealModal.vue";
+import ConfirmModal from "./ConfirmModal.vue";
 const catalogs = useCatalogsStore(),
   session = useSessionStore(),
   route = useRoute();
@@ -19,9 +20,14 @@ defineEmits<{ signOut: [] }>();
 const modal = ref<DialogKind | null>(null),
   grantFor = ref<Role | null>(null),
   profileGrantFor = ref<Profile | null>(null);
+const applicationEditFor = ref<Application | null>(null),
+  resourceEditFor = ref<Resource | null>(null),
+  roleEditFor = ref<Role | null>(null),
+  profileEditFor = ref<Profile | null>(null);
 const credentialReveal = ref<{ name: string; credential: string } | null>(
   null,
 );
+const confirmation = ref<{ title: string; description: string; action: () => Promise<unknown> } | null>(null);
 const current = computed(
   () => modules.find((module) => module.id === route.name) ?? modules[0],
 );
@@ -47,6 +53,10 @@ function close() {
   modal.value = null;
   grantFor.value = null;
   profileGrantFor.value = null;
+  applicationEditFor.value = null;
+  resourceEditFor.value = null;
+  roleEditFor.value = null;
+  profileEditFor.value = null;
 }
 provide(dialogsKey, {
   open,
@@ -55,6 +65,13 @@ provide(dialogsKey, {
   },
   grantProfile: (profile) => {
     profileGrantFor.value = profile;
+  },
+  editApplication: (application) => { applicationEditFor.value = application; },
+  editResource: (resource) => { resourceEditFor.value = resource; },
+  editRole: (role) => { roleEditFor.value = role; },
+  editProfile: (profile) => { profileEditFor.value = profile; },
+  confirm: (title, description, action) => {
+    confirmation.value = { title, description, action };
   },
 });
 const kinds: Record<string, DialogKind> = {
@@ -74,6 +91,10 @@ function currentModalKind(): DialogKind | "grant" | "profileGrant" | null {
   if (modal.value) return modal.value;
   if (grantFor.value) return "grant";
   if (profileGrantFor.value) return "profileGrant";
+  if (applicationEditFor.value) return "application";
+  if (resourceEditFor.value) return "resource";
+  if (roleEditFor.value) return "role";
+  if (profileEditFor.value) return "profile";
   return null;
 }
 watch(() => route.path, close);
@@ -162,10 +183,14 @@ watch(() => route.path, close);
       </div>
     </section>
     <EntityModal
-      v-if="modal || grantFor || profileGrantFor"
+      v-if="modal || grantFor || profileGrantFor || applicationEditFor || resourceEditFor || roleEditFor || profileEditFor"
       :kind="currentModalKind()!"
       :role="grantFor"
       :profile="profileGrantFor"
+      :application="applicationEditFor"
+      :resource="resourceEditFor"
+      :editing-role="roleEditFor"
+      :editing-profile="profileEditFor"
       @close="close"
       @credential="credentialReveal = $event"
     />
@@ -173,6 +198,14 @@ watch(() => route.path, close);
       v-if="credentialReveal"
       :reveal="credentialReveal"
       @close="credentialReveal = null"
+    />
+    <ConfirmModal
+      v-if="confirmation"
+      :title="confirmation.title"
+      :description="confirmation.description"
+      confirm-label="Retirar asociación"
+      :action="confirmation.action"
+      @close="confirmation = null"
     />
   </main>
 </template>

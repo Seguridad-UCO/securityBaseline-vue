@@ -61,6 +61,10 @@ export const createApplication = (data: ApplicationInput) =>
     "/api/v1/applications",
     body("POST", data),
   );
+export const updateApplication = (applicationId: string, data: ApplicationInput) =>
+  request<ApiResponse<Application>>(`/api/v1/applications/${id(applicationId)}`, body("PATCH", data));
+export const removeApplication = (applicationId: string) =>
+  request<null>(`/api/v1/applications/${id(applicationId)}`, { method: "DELETE" });
 export const listResources = (applicationId: string) =>
   request<ApiResponse<Resource[]>>(
     `/api/v1/applications/${id(applicationId)}/resources`,
@@ -70,6 +74,10 @@ export const createResource = (applicationId: string, data: ResourceInput) =>
     `/api/v1/applications/${id(applicationId)}/resources`,
     body("POST", data),
   );
+export const updateResource = (applicationId: string, resourceId: string, data: ResourceInput) =>
+  request<ApiResponse<Resource>>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, body("PATCH", data));
+export const removeResource = (applicationId: string, resourceId: string) =>
+  request<null>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, { method: "DELETE" });
 export const listTenants = () =>
   request<ApiResponse<Tenant[]>>("/api/v1/tenants");
 export const createTenant = (data: TenantInput) =>
@@ -88,6 +96,15 @@ export const grantResourceToRole = (roleId: string, resourceId: string) =>
   request<ApiResponse<Role>>(
     `/api/v1/roles/${id(roleId)}/resources`,
     body("POST", { resourceId }),
+  );
+export const updateRole = (roleId: string, name: string) =>
+  request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}`, body("PATCH", { name }));
+export const removeRole = (roleId: string) =>
+  request<null>(`/api/v1/roles/${id(roleId)}`, { method: "DELETE" });
+export const revokeResourceFromRole = (roleId: string, resourceId: string) =>
+  request<ApiResponse<Role>>(
+    `/api/v1/roles/${id(roleId)}/resources/${id(resourceId)}`,
+    { method: "DELETE" },
   );
 export const listAssignments = (roleId: string, params?: PageParams) =>
   request<ApiResponse<Page<Assignment>>>(
@@ -113,6 +130,15 @@ export const addRoleToProfile = (profileId: string, roleId: string) =>
   request<ApiResponse<Profile>>(
     `/api/v1/profiles/${id(profileId)}/roles`,
     body("POST", { roleId }),
+  );
+export const updateProfile = (profileId: string, name: string) =>
+  request<ApiResponse<Profile>>(`/api/v1/profiles/${id(profileId)}`, body("PATCH", { name }));
+export const removeProfile = (profileId: string) =>
+  request<null>(`/api/v1/profiles/${id(profileId)}`, { method: "DELETE" });
+export const removeRoleFromProfile = (profileId: string, roleId: string) =>
+  request<ApiResponse<Profile>>(
+    `/api/v1/profiles/${id(profileId)}/roles/${id(roleId)}`,
+    { method: "DELETE" },
   );
 // Asignación de perfiles: materializa una asignación de rol por cada rol que el perfil agrupa.
 export const assignProfile = (profileId: string, data: ProfileAssignmentInput) =>
