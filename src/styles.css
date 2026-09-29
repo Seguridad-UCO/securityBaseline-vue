@@ -99,7 +99,7 @@ button:disabled {
 
 .nav-caption {
     margin: 55px 10px 11px;
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     letter-spacing: .12em;
     color: #819188
 }
@@ -126,7 +126,7 @@ button:disabled {
 
 .side-link:hover {
     background: rgba(1, 139, 81, .08);
-    color: #153324
+    color: #0b3d25
 }
 
 .side-link.selected {
@@ -137,7 +137,7 @@ button:disabled {
 
 .side-link b {
     margin-left: auto;
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: inherit
 }
 
@@ -152,7 +152,7 @@ button:disabled {
 
 .side-session code {
     display: block;
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: #466352;
     overflow-wrap: anywhere
 }
@@ -184,7 +184,7 @@ button:disabled {
 
 .breadcrumb,
 .eyebrow {
-    font: 500 10px 'IBM Plex Mono';
+    font: 500 10px 'IBM Plex Mono', monospace;
     letter-spacing: .12em;
     color: var(--faint)
 }
@@ -239,7 +239,7 @@ button:disabled {
     place-items: center;
     background: var(--ink);
     color: #fff;
-    font: 500 10px 'IBM Plex Mono'
+    font: 500 10px 'IBM Plex Mono', monospace
 }
 
 .console-content {
@@ -406,11 +406,11 @@ button:disabled {
 .signal-map strong {
     width: 100%;
     color: var(--ink);
-    font: 600 21px 'IBM Plex Mono'
+    font: 600 21px 'IBM Plex Mono', monospace
 }
 
 .signal-map small {
-    font: 9px/1.1 'IBM Plex Mono';
+    font: 9px/1.1 'IBM Plex Mono', monospace;
     color: var(--text);
     margin-top: 4px
 }
@@ -470,7 +470,7 @@ button:disabled {
     position: absolute;
     top: 21px;
     right: 21px;
-    font: 500 19px 'IBM Plex Mono';
+    font: 500 19px 'IBM Plex Mono', monospace;
     color: var(--green)
 }
 
@@ -509,7 +509,7 @@ button:disabled {
 }
 
 .data-panel h2 b {
-    font: 500 11px 'IBM Plex Mono';
+    font: 500 11px 'IBM Plex Mono', monospace;
     color: var(--green);
     vertical-align: middle;
     margin-left: 4px
@@ -532,7 +532,7 @@ button:disabled {
 }
 
 .service-status {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: var(--green)
 }
 
@@ -560,7 +560,7 @@ button:disabled {
 }
 
 .service-card code {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: var(--green-ink);
     margin-top: 13px;
     overflow: hidden;
@@ -602,7 +602,7 @@ button:disabled {
 }
 
 .http-method {
-    font: 600 10px 'IBM Plex Mono';
+    font: 600 10px 'IBM Plex Mono', monospace;
     color: var(--green);
     background: var(--green-tint);
     border: 1px solid rgba(1, 139, 81, .2);
@@ -625,7 +625,7 @@ button:disabled {
 }
 
 .route-row code {
-    font: 500 13px 'IBM Plex Mono';
+    font: 500 13px 'IBM Plex Mono', monospace;
     color: var(--ink)
 }
 
@@ -638,7 +638,7 @@ button:disabled {
 
 .route-origin {
     color: var(--faint);
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap
@@ -680,7 +680,7 @@ button:disabled {
 }
 
 .tenant-grid-new code {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: var(--green-ink)
 }
 
@@ -715,7 +715,7 @@ button:disabled {
     color: #fff;
     display: grid;
     place-items: center;
-    font: 10px 'IBM Plex Mono'
+    font: 10px 'IBM Plex Mono', monospace
 }
 
 .user-detail strong {
@@ -731,7 +731,7 @@ button:disabled {
 }
 
 .provider-pill {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: var(--text)
 }
 
@@ -954,7 +954,7 @@ button:disabled {
     border-radius: 5px;
     padding: 7px 9px;
     color: var(--text);
-    font: 500 10px 'IBM Plex Mono';
+    font: 500 10px 'IBM Plex Mono', monospace;
     transition: .16s ease
 }
 
@@ -1008,7 +1008,7 @@ button:disabled {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font: 600 10px 'IBM Plex Mono';
+    font: 600 10px 'IBM Plex Mono', monospace;
     color: var(--green);
     background: var(--green-tint);
     border: 1px solid rgba(1, 139, 81, .2);
@@ -1023,7 +1023,7 @@ button:disabled {
 }
 
 .scope-pill.scope-global {
-    color: #4a5568;
+    color: #3e4857;
     background: rgba(74, 85, 104, .07);
     border-color: rgba(74, 85, 104, .17)
 }
@@ -1127,7 +1127,7 @@ button:disabled {
 }
 
 .assignment-user {
-    font: 11px 'IBM Plex Mono';
+    font: 11px 'IBM Plex Mono', monospace;
     color: var(--green-ink);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1235,7 +1235,7 @@ button:disabled {
 
 .decision-state {
     align-self: flex-start;
-    font: 700 13px 'IBM Plex Mono';
+    font: 700 13px 'IBM Plex Mono', monospace;
     letter-spacing: .04em;
     padding: 7px 13px;
     border-radius: 999px
@@ -1258,7 +1258,7 @@ button:disabled {
 
 .decision-reason {
     margin: 0;
-    font: 12px 'IBM Plex Mono';
+    font: 12px 'IBM Plex Mono', monospace;
     color: var(--text)
 }
 
@@ -1288,7 +1288,7 @@ button:disabled {
 }
 
 .decision-card dd code {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     background: var(--field);
     padding: 3px 6px;
     border-radius: 4px;
@@ -1312,7 +1312,7 @@ button:disabled {
     display: flex;
     flex-direction: column;
     background: radial-gradient(circle at 8% 82%, rgba(1, 139, 81, .17), transparent 30%), #e7f1eb;
-    color: #123022
+    color: #0b2c1a
 }
 
 .login-brand {
@@ -1331,7 +1331,7 @@ button:disabled {
     vertical-align: middle;
     margin-right: 10px;
     border-radius: 9px;
-    background: #018b51;
+    background: #007a46;
     color: #fff
 }
 
@@ -1370,7 +1370,7 @@ button:disabled {
 }
 
 .login-footer {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     letter-spacing: .12em;
     color: #6d8575
 }
@@ -1448,7 +1448,7 @@ button:disabled {
 }
 
 .login-setup code {
-    font: 10px 'IBM Plex Mono';
+    font: 10px 'IBM Plex Mono', monospace;
     color: #51442f
 }
 
@@ -1754,7 +1754,7 @@ button:disabled {
 
 .credential-reveal code {
     flex: 1;
-    font: 12px 'IBM Plex Mono';
+    font: 12px 'IBM Plex Mono', monospace;
     color: var(--green-ink);
     word-break: break-all
 }
