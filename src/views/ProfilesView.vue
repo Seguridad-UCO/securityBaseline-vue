@@ -6,6 +6,10 @@ import Icon from "../components/Icon.vue";
 import { removeProfile, removeRoleFromProfile } from "../api";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
+const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
+  profile.roleIds.length > 0 || catalogs.profileAssignments.some(
+    (assignment) => assignment.profileId === profile.id && (!assignment.validUntil || new Date(assignment.validUntil) > new Date()),
+  );
 </script>
 <template>
   <DataPanel
@@ -55,7 +59,7 @@ const catalogs = useCatalogsStore(),
             @click="dialogs.grantProfile(profile)"
           >
             <Icon name="plus" :size="13" />Rol
-          </button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
+          </button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" :disabled="profileHasAssociations(profile)" :title="profileHasAssociations(profile) ? 'Retira primero los roles y las asignaciones activas.' : 'Eliminar perfil'" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
         </footer>
       </article>
     </div></DataPanel
