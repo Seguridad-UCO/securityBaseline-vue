@@ -14,6 +14,7 @@ export interface Dialogs {
   grant: (role: Role) => void;
   grantProfile: (profile: Profile) => void;
   editApplication: (application: Application) => void;
+  rotateCredential: (application: Application) => void;
   editResource: (resource: Resource) => void;
   editRole: (role: Role) => void;
   editProfile: (profile: Profile) => void;

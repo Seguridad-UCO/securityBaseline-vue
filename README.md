@@ -13,7 +13,7 @@ Abrir `http://localhost:5173`. El puerto es estricto porque el BFF tiene configu
 
 `VITE_API_BASE_URL` conserva las configuraciones del frontend original:
 
-- Desarrollo: `http://localhost:8080`, por defecto; se puede sobrescribir en `.env.local` siguiendo `.env.example`.
+- Desarrollo: `http://localhost:18080`, por defecto; se puede sobrescribir en `.env.local` siguiendo `.env.example`.
 - Build de producción: `https://app-pdp-dev.azurewebsites.net`, mediante `.env.production`.
 
 El backend debe ser el PDP de `../securityBaseline/pdp`, con su sesión BFF, Keycloak y SurrealDB configurados. Cambiar la URL del frontend por sí solo no configura CORS ni los orígenes de retorno del BFF. `npm run preview` sirve el build de producción; no usa automáticamente la configuración de desarrollo.

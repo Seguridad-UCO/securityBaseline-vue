@@ -63,6 +63,12 @@ export const createApplication = (data: ApplicationInput) =>
   );
 export const updateApplication = (applicationId: string, data: ApplicationInput) =>
   request<ApiResponse<Application>>(`/api/v1/applications/${id(applicationId)}`, body("PATCH", data));
+// La nueva credencial solo llega en esta respuesta. El catálogo nunca la expone de nuevo.
+export const rotateApplicationCredential = (applicationId: string) =>
+  request<ApiResponse<RegisteredApplication>>(
+    `/api/v1/applications/${id(applicationId)}/credential-rotations`,
+    { method: "POST" },
+  );
 export const removeApplication = (applicationId: string) =>
   request<null>(`/api/v1/applications/${id(applicationId)}`, { method: "DELETE" });
 export const listResources = (applicationId: string) =>
