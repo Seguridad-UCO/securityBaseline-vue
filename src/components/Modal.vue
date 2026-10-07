@@ -9,6 +9,7 @@ const props = defineProps<{
   busy: boolean;
   saved?: boolean;
   danger?: boolean;
+  eyebrow?: string;
 }>();
 const emit = defineEmits<{ close: []; submit: [] }>();
 const dialog = ref<HTMLElement>();
@@ -56,7 +57,7 @@ onUnmounted(() => {
       >
         <header>
           <div>
-            <p class="eyebrow">NUEVO REGISTRO</p>
+            <p class="eyebrow">{{ eyebrow ?? "NUEVO REGISTRO" }}</p>
             <h2>{{ title }}</h2>
             <p>{{ description }}</p>
           </div>

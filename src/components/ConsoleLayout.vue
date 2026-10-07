@@ -12,6 +12,7 @@ import Icon from "./Icon.vue";
 import Alert from "./Alert.vue";
 import EntityModal from "./EntityModal.vue";
 import CredentialRevealModal from "./CredentialRevealModal.vue";
+import CredentialRotationModal from "./CredentialRotationModal.vue";
 import ConfirmModal from "./ConfirmModal.vue";
 const catalogs = useCatalogsStore(),
   session = useSessionStore(),
@@ -27,6 +28,7 @@ const applicationEditFor = ref<Application | null>(null),
 const credentialReveal = ref<{ name: string; credential: string } | null>(
   null,
 );
+const credentialRotationFor = ref<Application | null>(null);
 const confirmation = ref<{ title: string; description: string; action: () => Promise<unknown> } | null>(null);
 const current = computed(
   () => modules.find((module) => module.id === route.name) ?? modules[0],
@@ -57,6 +59,7 @@ function close() {
   resourceEditFor.value = null;
   roleEditFor.value = null;
   profileEditFor.value = null;
+  credentialRotationFor.value = null;
 }
 provide(dialogsKey, {
   open,
@@ -67,6 +70,7 @@ provide(dialogsKey, {
     profileGrantFor.value = profile;
   },
   editApplication: (application) => { applicationEditFor.value = application; },
+  rotateCredential: (application) => { credentialRotationFor.value = application; },
   editResource: (resource) => { resourceEditFor.value = resource; },
   editRole: (role) => { roleEditFor.value = role; },
   editProfile: (profile) => { profileEditFor.value = profile; },
@@ -198,6 +202,12 @@ watch(() => route.path, close);
       v-if="credentialReveal"
       :reveal="credentialReveal"
       @close="credentialReveal = null"
+    />
+    <CredentialRotationModal
+      v-if="credentialRotationFor"
+      :application="credentialRotationFor"
+      @close="credentialRotationFor = null"
+      @credential="credentialReveal = $event"
     />
     <ConfirmModal
       v-if="confirmation"
