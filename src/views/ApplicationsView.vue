@@ -4,6 +4,7 @@ import { useDialogs } from "../composables/useDialogs";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
 import { removeApplication } from "../api";
+import { environmentLabel } from "../api/environments";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
 
@@ -27,6 +28,9 @@ const applicationHasAssociations = (applicationId: string) =>
         <h3>{{ app.name }}</h3>
         <p>{{ app.description }}</p>
         <code>{{ app.baseUrl }}</code>
+        <div class="environment-badges" aria-label="Ambientes habilitados">
+          <span v-for="environment in app.enabledEnvironments" :key="environment">{{ environmentLabel(environment) }}</span>
+        </div>
         <footer>
           <span>Aplicación protegida</span><button class="grant-action" @click="dialogs.editApplication(app)">Editar</button><button class="grant-action credential-action" title="Generar una nueva credencial técnica e invalidar la anterior" @click="dialogs.rotateCredential(app)"><Icon name="key" :size="14" />Rotar credencial</button><button class="grant-action danger" :disabled="applicationHasAssociations(app.id)" :title="applicationHasAssociations(app.id) ? 'Elimina primero los recursos, roles, perfiles y asignaciones asociados.' : 'Eliminar aplicación'" @click="dialogs.confirm('Eliminar aplicación', 'Se eliminará físicamente cuando no tenga recursos, roles, perfiles y asignaciones dependientes.', () => removeApplication(app.id))">Eliminar</button><Icon name="shield" :size="15" />
         </footer>
@@ -37,4 +41,6 @@ const applicationHasAssociations = (applicationId: string) =>
 .danger { color: var(--red); }
 .credential-action { color: var(--green-ink); }
 .credential-action :deep(svg) { margin-right: 4px; vertical-align: -2px; }
+.environment-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.environment-badges span { background: var(--green-wash); border-radius: 999px; color: var(--green-ink); font-size: 12px; padding: 3px 8px; }
 </style>
