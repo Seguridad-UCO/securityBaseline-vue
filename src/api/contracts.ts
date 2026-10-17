@@ -26,10 +26,12 @@ export interface Session {
   email: string;
   tenantId: string;
 }
+export type ApplicationEnvironment = "dev" | "lab" | "prod";
 export interface ApplicationInput {
   name: string;
   description: string;
   baseUrl: string;
+  enabledEnvironments: ApplicationEnvironment[];
 }
 export interface Application extends ApplicationInput {
   id: string;

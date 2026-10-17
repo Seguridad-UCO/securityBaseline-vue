@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import * as api from "../api";
-import type { Application, HttpMethod, Profile, Resource, Role } from "../api/contracts";
+import { APPLICATION_ENVIRONMENTS } from "../api/environments";
+import type { Application, ApplicationEnvironment, HttpMethod, Profile, Resource, Role } from "../api/contracts";
 import type { DialogKind } from "../composables/useDialogs";
 import { useMutation } from "../composables/useMutation";
 import { useCatalogsStore } from "../stores/catalogs";
+import Icon from "./Icon.vue";
 import Modal from "./Modal.vue";
 import MethodChoice from "./MethodChoice.vue";
 const props = defineProps<{
@@ -22,11 +24,14 @@ const emit = defineEmits<{
 }>();
 const catalogs = useCatalogsStore();
 const editing = computed(() => !!(props.application || props.resource || props.editingRole || props.editingProfile));
-const { busy, error, saved, run } = useMutation();
+const { busy, error: mutationError, saved, run } = useMutation();
+const localError = ref("");
+const error = computed(() => localError.value || mutationError.value);
 const form = reactive({
   name: "",
   description: "",
   baseUrl: "",
+  enabledEnvironments: ["dev", "lab", "prod"] as ApplicationEnvironment[],
   path: "",
   method: "GET" as HttpMethod,
   code: "",
@@ -58,6 +63,9 @@ watch(() => [props.application, props.resource, props.editingRole, props.editing
   form.name = "name" in entity ? entity.name : "";
   form.description = props.application?.description ?? "";
   form.baseUrl = props.application?.baseUrl ?? "";
+  form.enabledEnvironments = props.application
+    ? [...props.application.enabledEnvironments]
+    : ["dev", "lab", "prod"];
   form.path = props.resource?.path ?? "";
   form.method = props.resource?.method ?? "GET";
   form.applicationId = props.resource?.applicationId ?? props.application?.id ?? props.editingRole?.applicationId ?? props.editingProfile?.applicationId ?? "";
@@ -126,13 +134,22 @@ const copy = computed(
     })[props.kind],
 );
 async function submit() {
+  if (props.kind === "application" && form.enabledEnvironments.length === 0) {
+    localError.value = "Selecciona al menos un ambiente";
+    return;
+  }
+  localError.value = "";
   const actions: Record<DialogKind | "grant" | "profileGrant", () => Promise<unknown>> = {
     application: async () => {
-      if (props.application) return api.updateApplication(props.application.id, { name: form.name, description: form.description, baseUrl: form.baseUrl });
-      const result = await api.createApplication({
+      const input = {
         name: form.name,
         description: form.description,
         baseUrl: form.baseUrl,
+        enabledEnvironments: form.enabledEnvironments,
+      };
+      if (props.application) return api.updateApplication(props.application.id, input);
+      const result = await api.createApplication({
+        ...input,
       });
       registeredCredential = { name: form.name, credential: result.data.credential };
     },
@@ -210,7 +227,26 @@ async function submit() {
           required
           type="url"
           placeholder="https://academica.uco.edu.co" /></label
-    ></template>
+      ><fieldset class="environment-choice">
+        <legend>Ambientes</legend>
+        <div class="environment-options">
+          <label
+            v-for="environment in APPLICATION_ENVIRONMENTS"
+            :key="environment.value"
+            class="environment-option"
+            :class="{ chosen: form.enabledEnvironments.includes(environment.value) }"
+          >
+            <input
+              v-model="form.enabledEnvironments"
+              type="checkbox"
+              :value="environment.value"
+            />
+            <span class="environment-check"><Icon name="check" :size="12" /></span>
+            <span>{{ environment.label }}</span>
+          </label>
+        </div>
+      </fieldset>
+    </template>
     <template v-if="kind === 'tenant'"
       ><label
         >Código técnico<input
@@ -337,3 +373,71 @@ async function submit() {
     >
   </Modal>
 </template>
+<style scoped>
+.environment-choice { border: 0; margin: 0; padding: 0; display: grid; gap: 9px; }
+.environment-choice legend {
+  font-size: 11px;
+  letter-spacing: .04em;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0;
+  margin: 0;
+}
+.environment-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.environment-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--text);
+  padding: 8px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: .16s ease;
+}
+.environment-option:hover { border-color: var(--green); color: var(--green-ink); }
+.environment-option.chosen {
+  border-color: var(--green);
+  background: var(--green-tint);
+  color: var(--green-ink);
+}
+.environment-option:has(input:focus-visible) {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(1, 139, 81, .1);
+}
+.environment-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.environment-check {
+  display: grid;
+  place-items: center;
+  height: 16px;
+  width: 16px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: #fff;
+  transition: .16s ease;
+}
+.environment-check svg { opacity: 0; transition: .16s ease; }
+.environment-option.chosen .environment-check {
+  border-color: var(--green);
+  background: var(--green);
+}
+.environment-option.chosen .environment-check svg { opacity: 1; }
+</style>
