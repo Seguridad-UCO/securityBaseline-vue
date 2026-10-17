@@ -826,6 +826,10 @@ button:disabled {
     overflow: hidden
 }
 
+.modal.wide {
+    width: min(100%, 720px)
+}
+
 .modal header {
     padding: 26px 28px 19px;
     display: flex;
