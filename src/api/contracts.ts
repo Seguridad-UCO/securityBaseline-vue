@@ -44,6 +44,9 @@ export interface RegisteredApplication extends Application {
   credential: string;
 }
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type BulkHttpMethod = HttpMethod | "HEAD" | "OPTIONS";
+export interface BulkResourceRowError { row: number; field: string; value: string; code: string; description: string; }
+export interface BulkResourceValidation { ready: boolean; totalRows: number; validRows: number; invalidRows: number; errors: BulkResourceRowError[]; }
 export interface ResourceInput {
   path: string;
   method: HttpMethod;

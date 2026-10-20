@@ -1,5 +1,5 @@
 export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18080"
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080"
 ).replace(/\/$/, "");
 export class ApiError extends Error {
   constructor(
@@ -31,10 +31,8 @@ export async function request<T>(
     ) {
       await fetch(`${API_BASE_URL}/api/v1/session`, { credentials: "include" });
     }
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      ...csrfHeader(),
-    });
+    const headers = new Headers(csrfHeader());
+    if (!(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
     new Headers(options.headers).forEach((value, key) =>
       headers.set(key, value),
     );
@@ -64,4 +62,17 @@ export async function request<T>(
   return response.status === 204
     ? (null as T)
     : (response.json() as Promise<T>);
+}
+export async function requestBlob(path: string, options: RequestInit = {}): Promise<Blob> {
+  const method = (options.method ?? "GET").toUpperCase();
+  if (!["GET", "HEAD", "OPTIONS"].includes(method) && !Object.keys(csrfHeader()).length)
+    await fetch(`${API_BASE_URL}/api/v1/session`, { credentials: "include" });
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options, credentials: "include", headers: { ...csrfHeader(), ...options.headers },
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new ApiError(payload?.detail ?? payload?.message ?? `El API respondió con estado ${response.status}.`, response.status);
+  }
+  return response.blob();
 }

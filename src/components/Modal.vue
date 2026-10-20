@@ -8,6 +8,8 @@ const props = defineProps<{
   error: string;
   busy: boolean;
   saved?: boolean;
+  submitDisabled?: boolean;
+  wide?: boolean;
   danger?: boolean;
   eyebrow?: string;
 }>();
@@ -50,7 +52,7 @@ onUnmounted(() => {
     ><div class="modal-backdrop" role="presentation" @mousedown.self="close">
       <section
         ref="dialog"
-        class="modal"
+        :class="['modal', { wide }]"
         role="dialog"
         aria-modal="true"
         :aria-label="title"
@@ -94,7 +96,7 @@ onUnmounted(() => {
               @click="close"
             >
               Cancelar</button
-            ><button :class="danger ? 'danger-action' : 'create-action'" type="submit" :disabled="busy">
+            ><button :class="danger ? 'danger-action' : 'create-action'" type="submit" :disabled="busy || submitDisabled">
               {{
                 busy
                   ? "Actualizando…"
