@@ -1,10 +1,11 @@
-import { API_BASE_URL, request } from "./client";
+import { API_BASE_URL, request, requestBlob } from "./client";
 import type {
   ApiResponse,
   Application,
   ApplicationInput,
   Assignment,
   AssignmentInput,
+  BulkResourceValidation,
   AuthorizationInput,
   Decision,
   Page,
@@ -84,6 +85,11 @@ export const updateResource = (applicationId: string, resourceId: string, data: 
   request<ApiResponse<Resource>>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, body("PATCH", data));
 export const removeResource = (applicationId: string, resourceId: string) =>
   request<null>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, { method: "DELETE" });
+const bulkBody = (file: File) => { const data = new FormData(); data.append("file", file); return { method: "POST", body: data }; };
+export const downloadBulkResourceTemplate = (format: "xlsx" | "xls") => requestBlob(`/api/v1/resources/bulk/template?format=${format}`);
+export const validateBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk/validate", bulkBody(file));
+export const importBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk", bulkBody(file));
+export const downloadBulkResourceErrorReport = (file: File) => requestBlob("/api/v1/resources/bulk/error-report", bulkBody(file));
 export const listTenants = () =>
   request<ApiResponse<Tenant[]>>("/api/v1/tenants");
 export const createTenant = (data: TenantInput) =>

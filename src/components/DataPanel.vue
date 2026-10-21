@@ -5,8 +5,9 @@ defineProps<{
   count: number;
   empty: string;
   actionText?: string;
+  secondaryActionText?: string;
 }>();
-defineEmits<{ action: [] }>();
+defineEmits<{ action: []; secondaryAction: [] }>();
 </script>
 <template>
   <section class="data-panel">
@@ -17,9 +18,9 @@ defineEmits<{ action: [] }>();
           {{ title }} <b>{{ count }}</b>
         </h2>
       </div>
-      <button v-if="actionText" class="panel-action" @click="$emit('action')">
+      <div class="panel-actions"><button v-if="secondaryActionText" class="panel-secondary-action" @click="$emit('secondaryAction')"><span>↥</span>{{ secondaryActionText }}</button><button v-if="actionText" class="panel-action" @click="$emit('action')">
         <Icon name="plus" :size="15" />{{ actionText }}
-      </button>
+      </button></div>
     </header>
     <slot v-if="count" />
     <div v-else class="empty-state">
@@ -28,3 +29,6 @@ defineEmits<{ action: [] }>();
     </div>
   </section>
 </template>
+<style scoped>
+.panel-actions { display:flex; gap:8px; align-items:center; }.panel-secondary-action { height:39px; border:1px solid var(--line); background:var(--paper); color:var(--text); border-radius:6px; padding:0 12px; display:inline-flex; align-items:center; gap:7px; font-size:12px; transition:.16s ease; }.panel-secondary-action span { color:var(--green); font:600 16px 'IBM Plex Mono',monospace; }.panel-secondary-action:hover { border-color:rgba(1,139,81,.42); color:var(--green-ink); background:var(--green-tint); }
+</style>

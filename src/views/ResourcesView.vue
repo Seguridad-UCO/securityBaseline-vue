@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
+import BulkResourceModal from "../components/BulkResourceModal.vue";
 import { removeResource } from "../api";
 const catalogs = useCatalogsStore(),
-  dialogs = useDialogs();
+  dialogs = useDialogs(),
+  bulkOpen = ref(false);
 </script>
 <template>
   <DataPanel
@@ -13,7 +16,9 @@ const catalogs = useCatalogsStore(),
     :count="catalogs.resources.length"
     empty="Registra el primer endpoint HTTP del perímetro."
     action-text="Registrar recurso"
+    secondary-action-text="Carga masiva"
     @action="dialogs.open('resource')"
+    @secondary-action="bulkOpen = true"
     ><div class="route-table">
       <article
         v-for="resource in catalogs.resources"
@@ -45,6 +50,7 @@ const catalogs = useCatalogsStore(),
       </article>
     </div></DataPanel
   >
+  <BulkResourceModal v-if="bulkOpen" @close="bulkOpen = false" />
 </template>
 <style scoped>
 .resource-actions { display: flex; justify-content: flex-end; gap: 6px; }
