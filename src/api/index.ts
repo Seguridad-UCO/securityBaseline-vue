@@ -18,6 +18,7 @@ import type {
   Resource,
   ResourceInput,
   Role,
+  RoleResourcesBatchInput,
   RoleInput,
   Session,
   Tenant,
@@ -114,6 +115,12 @@ export const grantResourceToRole = (roleId: string, resourceId: string) =>
     `/api/v1/roles/${id(roleId)}/resources`,
     body("POST", { resourceId }),
   );
+/** Adds the selected resources and leaves any existing grants untouched. */
+export const addRoleResourcesBatch = (roleId: string, data: RoleResourcesBatchInput) =>
+  request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}/resources/batch`, body("POST", data));
+/** Replaces grants only inside the supplied application context. */
+export const syncRoleResources = (roleId: string, data: RoleResourcesBatchInput) =>
+  request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}/resources`, body("PUT", data));
 export const updateRole = (roleId: string, name: string) =>
   request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}`, body("PATCH", { name }));
 export const removeRole = (roleId: string) =>
