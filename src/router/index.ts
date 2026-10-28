@@ -7,6 +7,7 @@ const views = {
   home: () => import("../views/HomeView.vue"),
   applications: () => import("../views/ApplicationsView.vue"),
   resources: () => import("../views/ResourcesView.vue"),
+  bulkLoad: () => import("../views/BulkLoadView.vue"),
   roles: () => import("../views/RolesView.vue"),
   assignments: () => import("../views/AssignmentsView.vue"),
   profiles: () => import("../views/ProfilesView.vue"),
