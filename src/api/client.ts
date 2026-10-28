@@ -52,10 +52,14 @@ export async function request<T>(
     if (response.status === 401)
       sessionEvents.dispatchEvent(new Event("expired"));
     const payload = await response.json().catch(() => null);
+    const defaultMessage =
+      response.status === 403
+        ? "Operación bloqueada por políticas de seguridad de la red (WAF) o permisos insuficientes."
+        : `El API respondió con estado ${response.status}.`;
     throw new ApiError(
       payload?.detail ??
         payload?.message ??
-        `El API respondió con estado ${response.status}.`,
+        defaultMessage,
       response.status,
     );
   }
@@ -72,7 +76,11 @@ export async function requestBlob(path: string, options: RequestInit = {}): Prom
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
-    throw new ApiError(payload?.detail ?? payload?.message ?? `El API respondió con estado ${response.status}.`, response.status);
+    const defaultMessage =
+      response.status === 403
+        ? "Operación bloqueada por políticas de seguridad de la red (WAF) o permisos insuficientes."
+        : `El API respondió con estado ${response.status}.`;
+    throw new ApiError(payload?.detail ?? payload?.message ?? defaultMessage, response.status);
   }
   return response.blob();
 }

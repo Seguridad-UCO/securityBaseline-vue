@@ -40,6 +40,12 @@ const body = (method: string, data: unknown): RequestInit => ({
 export const getApiBaseUrl = () => API_BASE_URL;
 export const getSession = () =>
   request<ApiResponse<Session>>("/api/v1/session");
+export const refreshSession = () =>
+  request<ApiResponse<Session>>("/api/v1/session");
+export const refreshSessionToken = () =>
+  request<{ accessToken: string; expiresIn: number }>("/api/v1/session/token/refresh", {
+    method: "POST",
+  }).catch(() => refreshSession());
 export const startKeycloakLogin = (returnTo?: string) => {
   const query = returnTo
     ? `?return_to=${encodeURIComponent(returnTo)}`
