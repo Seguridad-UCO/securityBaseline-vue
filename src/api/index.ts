@@ -18,6 +18,7 @@ import type {
   Resource,
   ResourceInput,
   Role,
+  RoleResourcesBatchInput,
   RoleInput,
   Session,
   Tenant,
@@ -87,6 +88,11 @@ export const removeResource = (applicationId: string, resourceId: string) =>
   request<null>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, { method: "DELETE" });
 const bulkBody = (file: File) => { const data = new FormData(); data.append("file", file); return { method: "POST", body: data }; };
 export const downloadBulkResourceTemplate = (format: "xlsx" | "xls") => requestBlob(`/api/v1/resources/bulk/template?format=${format}`);
+export const downloadBulkCatalogTemplate = (mode: "resourcesRoles" | "roles" | "profiles") =>
+  requestBlob(`/api/v1/resources/bulk/catalog-template/${mode === "resourcesRoles" ? "resources-roles" : mode}`);
+export const validateBulkCatalog = (mode: "roles" | "profiles", file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${mode}/validate`, bulkBody(file));
+export const importBulkCatalog = (mode: "roles" | "profiles", file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${mode}`, bulkBody(file));
+export const downloadBulkCatalogErrorReport = (mode: "roles" | "profiles", file: File) => requestBlob(`/api/v1/resources/bulk/catalog/${mode}/error-report`, bulkBody(file));
 export const validateBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk/validate", bulkBody(file));
 export const importBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk", bulkBody(file));
 export const downloadBulkResourceErrorReport = (file: File) => requestBlob("/api/v1/resources/bulk/error-report", bulkBody(file));
@@ -109,6 +115,12 @@ export const grantResourceToRole = (roleId: string, resourceId: string) =>
     `/api/v1/roles/${id(roleId)}/resources`,
     body("POST", { resourceId }),
   );
+/** Adds the selected resources and leaves any existing grants untouched. */
+export const addRoleResourcesBatch = (roleId: string, data: RoleResourcesBatchInput) =>
+  request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}/resources/batch`, body("POST", data));
+/** Replaces grants only inside the supplied application context. */
+export const syncRoleResources = (roleId: string, data: RoleResourcesBatchInput) =>
+  request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}/resources`, body("PUT", data));
 export const updateRole = (roleId: string, name: string) =>
   request<ApiResponse<Role>>(`/api/v1/roles/${id(roleId)}`, body("PATCH", { name }));
 export const removeRole = (roleId: string) =>

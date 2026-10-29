@@ -31,7 +31,7 @@ const credentialReveal = ref<{ name: string; credential: string } | null>(
 const credentialRotationFor = ref<Application | null>(null);
 const confirmation = ref<{ title: string; description: string; action: () => Promise<unknown> } | null>(null);
 const current = computed(
-  () => modules.find((module) => module.id === route.name) ?? modules[0],
+  () => route.name === "rolePermissions" ? modules.find((module) => module.id === "roles")! : modules.find((module) => module.id === route.name) ?? modules[0],
 );
 function open(kind: DialogKind) {
   if (kind === "resource" && !catalogs.apps.length) {
