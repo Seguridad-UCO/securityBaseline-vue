@@ -1,5 +1,5 @@
 import { onScopeDispose, ref, watch } from "vue";
-import { getApiBaseUrl, refreshSessionToken } from "../api";
+import { getApiBaseUrl, refreshSession } from "../api";
 import { useSessionStore } from "../stores/session";
 
 export interface InactivityOptions {
@@ -87,7 +87,7 @@ export function useInactivityTracker(options: InactivityOptions = {}) {
   async function stayConnected() {
     isRefreshing.value = true;
     try {
-      await refreshSessionToken();
+      await refreshSession();
     } catch {
       // Si falla, al menos reseteamos localmente y verificamos estado
     } finally {

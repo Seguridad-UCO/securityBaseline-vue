@@ -7,7 +7,7 @@
 ## 2. Componentes a Crear / Modificar
 
 ### 2.1 API Client (`src/api/client.ts` y `src/api/index.ts`)
-- Añadir función `refreshSessionToken()` que consuma `POST /api/v1/session/token/refresh` (o fallback a `GET /api/v1/session`).
+- (Retirado por ADR-033) El keepalive usa `refreshSession()` sobre `GET /api/v1/session`; ya no existe `refreshSessionToken()` ni `POST /api/v1/session/token/refresh`.
 - Enriquecer el manejo de respuestas `403` para identificar si provienen del WAF o denegación de permisos y brindar un texto descriptivo.
 
 ### 2.2 Composable de Inactividad (`src/composables/useInactivityTracker.ts`)

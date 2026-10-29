@@ -18,7 +18,7 @@ Con la implementación de las capacidades de seguridad en el backend (**HU-027 W
 ### CA-3: Extensión y Renovación Silenciosa de Sesión
 - **GIVEN** el modal de advertencia visible
 - **WHEN** el usuario hace clic en "Continuar conectado"
-- **THEN** el sistema envía una petición de refresco/keepalive al backend (`POST /api/v1/session/token/refresh` o `/api/v1/session`), reinicia el temporizador de inactividad, cierra el modal y permite continuar trabajando sin interrupción.
+- **THEN** el sistema envía una petición de refresco/keepalive al backend (`GET /api/v1/session`; el proxy de refresh fue retirado, ver ADR-033), reinicia el temporizador de inactividad, cierra el modal y permite continuar trabajando sin interrupción.
 
 ### CA-4: Cierre Forzoso por Inactividad y Revocación en Redis
 - **GIVEN** el modal de advertencia visible

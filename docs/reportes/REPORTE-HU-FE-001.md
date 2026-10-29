@@ -12,7 +12,7 @@
 | :--- | :--- | :--- |
 | **Tracker de Inactividad** | `src/composables/useInactivityTracker.ts` | Detección de actividad física (`mousemove`, `keydown`, `click`, `scroll`, `touchstart`) con throttle de CPU, temporizadores de aviso/cierre y sincronización entre pestañas mediante `BroadcastChannel`. |
 | **Modal de Advertencia** | `src/components/InactivityModal.vue` | Modal accesible con cuenta regresiva visual (`countdown`), estado crítico (`< 15s`), botón de extensión de sesión y botón de cierre forzoso. |
-| **Keepalive / Refresco** | `src/api/index.ts` | Exposición de `refreshSessionToken()` que invoca `POST /api/v1/session/token/refresh` con resiliencia y fallback al endpoint BFF. |
+| **Keepalive / Refresco** | `src/api/index.ts` | Keepalive mediante `refreshSession()` sobre `GET /api/v1/session` (el proxy `POST /api/v1/session/token/refresh` fue retirado, ADR-033). |
 | **Manejo Resiliente WAF** | `src/api/client.ts` | Interceptor de código `403` con mensaje amigable para bloqueos perimetrales del WAF Coraza / CRS v4. |
 | **Icono de Temporizador** | `src/components/Icon.vue` | Incorporación del glifo `clock` para coherencia visual del modal. |
 | **Integración en Layout** | `src/App.vue` | Enlace del composable y modal con el ciclo de vida de la sesión autenticada. |
