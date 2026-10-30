@@ -5,6 +5,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -31,6 +32,16 @@ function defaultMessageFor(status: number): string {
     return "El servicio no está disponible temporalmente. Inténtalo de nuevo en unos segundos.";
   return `El API respondió con estado ${status}.`;
 }
+/**
+ * Mensajes de los 403 con `code` propio (ADR-033/036): el panel debe decir qué hacer, no "permisos
+ * insuficientes". Un código desconocido conserva el `detail` del API.
+ */
+const FORBIDDEN_MESSAGES: Record<string, string> = {
+  MFA_REQUIRED:
+    "Esta operación exige verificación en dos pasos (MFA). Inicia sesión con tu segundo factor e inténtalo de nuevo.",
+  NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG:
+    "Para definir roles o perfiles de alcance inquilino debes administrar al menos una aplicación del inquilino.",
+};
 export async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -66,11 +77,14 @@ export async function request<T>(
       sessionEvents.dispatchEvent(new Event("expired"));
     const payload = await response.json().catch(() => null);
     const defaultMessage = defaultMessageFor(response.status);
+    const code = typeof payload?.code === "string" ? payload.code : undefined;
     throw new ApiError(
-      payload?.detail ??
+      (response.status === 403 && code ? FORBIDDEN_MESSAGES[code] : undefined) ??
+        payload?.detail ??
         payload?.message ??
         defaultMessage,
       response.status,
+      code,
     );
   }
   return response.status === 204
