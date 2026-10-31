@@ -42,6 +42,12 @@ const FORBIDDEN_MESSAGES: Record<string, string> = {
   NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG:
     "Para definir roles o perfiles de alcance inquilino debes administrar al menos una aplicación del inquilino.",
 };
+// El `detail` de estos conflictos trae identificadores internos; la persona usuaria debe ver una frase legible.
+const MESSAGES_WITHOUT_IDS: Record<string, string> = {
+  ASSIGNMENT_ALREADY_ACTIVE: "Esta persona ya tiene ese rol vigente en la aplicación.",
+  PROFILE_ASSIGNMENT_ALREADY_ACTIVE: "Esta persona ya tiene ese perfil vigente en la aplicación.",
+  PROTECTED_ROLE: "El rol ADMIN administra la aplicación y no se puede modificar ni eliminar.",
+};
 export async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -80,6 +86,7 @@ export async function request<T>(
     const code = typeof payload?.code === "string" ? payload.code : undefined;
     throw new ApiError(
       (response.status === 403 && code ? FORBIDDEN_MESSAGES[code] : undefined) ??
+        (code ? MESSAGES_WITHOUT_IDS[code] : undefined) ??
         payload?.detail ??
         payload?.message ??
         defaultMessage,
