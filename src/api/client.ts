@@ -48,6 +48,11 @@ const MESSAGES_WITHOUT_IDS: Record<string, string> = {
   PROFILE_ASSIGNMENT_ALREADY_ACTIVE: "Esta persona ya tiene ese perfil vigente en la aplicación.",
   PROTECTED_ROLE: "El rol ADMIN administra la aplicación y no se puede modificar ni eliminar.",
 };
+// Última defensa: ningún texto del servidor llega a la pantalla con un identificador interno (UUID).
+const UUID = /\s*\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+export function withoutIds(message?: string): string | undefined {
+  return message ? message.replace(UUID, "").replace(/\s{2,}/g, " ").trim() || undefined : undefined;
+}
 export async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -87,8 +92,7 @@ export async function request<T>(
     throw new ApiError(
       (response.status === 403 && code ? FORBIDDEN_MESSAGES[code] : undefined) ??
         (code ? MESSAGES_WITHOUT_IDS[code] : undefined) ??
-        payload?.detail ??
-        payload?.message ??
+        withoutIds(payload?.detail ?? payload?.message) ??
         defaultMessage,
       response.status,
       code,

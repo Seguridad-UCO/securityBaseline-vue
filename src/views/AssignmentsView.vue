@@ -44,10 +44,10 @@ async function revoke(roleId: string, assignmentId: string) {
       >
         <span class="assignment-role"
           ><Icon name="key" :size="14" />{{
-            assignment.role?.name || assignment.roleId
+            assignment.role?.name || "Rol sin nombre"
           }}</span
         ><span class="assignment-user">{{
-          assignment.user?.name || assignment.user?.email || assignment.userId
+          assignment.user?.name || assignment.user?.email || "Persona sin nombre"
         }}</span
         ><span class="assignment-since"
           >desde {{ formatDate(assignment.validFrom) }}</span

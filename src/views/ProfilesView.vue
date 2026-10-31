@@ -43,7 +43,7 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
         <div v-if="profile.roleIds.length" class="association-list">
           <button v-for="roleId in profile.roleIds" :key="roleId" class="association-chip"
             @click="dialogs.confirm('Retirar rol', 'El rol dejará de pertenecer a este perfil.', () => removeRoleFromProfile(profile.id, roleId))">
-            {{ catalogs.roles.find((role) => role.id === roleId)?.name || roleId }} <Icon name="close" :size="12" />
+            {{ catalogs.roles.find((role) => role.id === roleId)?.name || "Rol sin nombre" }} <Icon name="close" :size="12" />
           </button>
         </div>
         <footer>

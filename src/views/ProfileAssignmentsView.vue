@@ -43,10 +43,10 @@ async function revoke(profileId: string, profileAssignmentId: string) {
       >
         <span class="assignment-role"
           ><Icon name="layers" :size="14" />{{
-            assignment.profile?.name || assignment.profileId
+            assignment.profile?.name || "Perfil sin nombre"
           }}</span
         ><span class="assignment-user">{{
-          assignment.user?.name || assignment.user?.email || assignment.userId
+          assignment.user?.name || assignment.user?.email || "Persona sin nombre"
         }}</span
         ><span class="assignment-since"
           >{{ assignment.generatedAssignmentIds.length }} rol{{
