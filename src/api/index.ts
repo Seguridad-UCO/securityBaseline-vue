@@ -11,6 +11,7 @@ import type {
   Page,
   PageParams,
   Profile,
+  ProfileRolesBatchInput,
   ProfileAssignment,
   ProfileAssignmentInput,
   ProfileInput,
@@ -155,6 +156,10 @@ export const addRoleToProfile = (profileId: string, roleId: string) =>
     `/api/v1/profiles/${id(profileId)}/roles`,
     body("POST", { roleId }),
   );
+export const addProfileRolesBatch = (profileId: string, data: ProfileRolesBatchInput) =>
+  request<ApiResponse<Profile>>(`/api/v1/profiles/${id(profileId)}/roles/batch`, body("POST", data));
+export const syncProfileRoles = (profileId: string, data: ProfileRolesBatchInput) =>
+  request<ApiResponse<Profile>>(`/api/v1/profiles/${id(profileId)}/roles`, body("PUT", data));
 export const updateProfile = (profileId: string, name: string) =>
   request<ApiResponse<Profile>>(`/api/v1/profiles/${id(profileId)}`, body("PATCH", { name }));
 export const removeProfile = (profileId: string) =>
