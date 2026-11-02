@@ -15,6 +15,7 @@ import type {
   ProfileAssignmentInput,
   ProfileInput,
   RegisteredApplication,
+  RegisteredServiceIdentity,
   Resource,
   ResourceInput,
   Role,
@@ -24,6 +25,9 @@ import type {
   Tenant,
   TenantInput,
   User,
+  ServiceIdentity,
+  ServiceAccessGrant,
+  ServiceTechnicalRole,
 } from "./contracts";
 
 function query(params: PageParams = {}) {
@@ -73,6 +77,34 @@ export const rotateApplicationCredential = (applicationId: string) =>
   );
 export const removeApplication = (applicationId: string) =>
   request<null>(`/api/v1/applications/${id(applicationId)}`, { method: "DELETE" });
+export const listServiceIdentities = (applicationId: string) =>
+  request<ApiResponse<ServiceIdentity[]>>(`/api/v1/applications/${id(applicationId)}/service-identities`);
+export const createServiceIdentity = (applicationId: string, name: string) =>
+  request<ApiResponse<RegisteredServiceIdentity>>(`/api/v1/applications/${id(applicationId)}/service-identities`, body("POST", { name }));
+export const listServiceAccessGrants = (applicationId: string, identityId: string) =>
+  request<ApiResponse<ServiceAccessGrant[]>>(`/api/v1/applications/${id(applicationId)}/service-identities/${id(identityId)}/access-requests`);
+export const listReceivedServiceAccessGrants = (applicationId: string) =>
+  request<ApiResponse<ServiceAccessGrant[]>>(`/api/v1/applications/${id(applicationId)}/service-access-requests`);
+export const requestServiceAccess = (applicationId: string, identityId: string, resourceId: string) =>
+  request<ApiResponse<ServiceAccessGrant>>(`/api/v1/applications/${id(applicationId)}/service-identities/${id(identityId)}/access-requests`, body("POST", { resourceId }));
+export const requestServiceTechnicalRoleAccess = (applicationId: string, identityId: string, technicalRoleId: string) =>
+  request<ApiResponse<ServiceAccessGrant>>(`/api/v1/applications/${id(applicationId)}/service-identities/${id(identityId)}/access-requests`, body("POST", { technicalRoleId }));
+export const listServiceTechnicalRoles = (applicationId: string, params?: PageParams) =>
+  request<ApiResponse<Page<ServiceTechnicalRole>>>(`/api/v1/applications/${id(applicationId)}/service-technical-roles${query(params)}`);
+export const createServiceTechnicalRole = (applicationId: string, data: { code: string; name: string; resourceIds: string[] }) =>
+  request<ApiResponse<ServiceTechnicalRole>>(`/api/v1/applications/${id(applicationId)}/service-technical-roles`, body("POST", data));
+export const listServiceTechnicalRoleResources = (applicationId: string, roleId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Resource>>>(`/api/v1/applications/${id(applicationId)}/service-technical-roles/${id(roleId)}/resources${query(params)}`);
+export const addServiceTechnicalRoleResource = (applicationId: string, roleId: string, resourceId: string) =>
+  request<null>(`/api/v1/applications/${id(applicationId)}/service-technical-roles/${id(roleId)}/resources`, body("POST", { resourceId }));
+export const removeServiceTechnicalRoleResource = (applicationId: string, roleId: string, resourceId: string) =>
+  request<null>(`/api/v1/applications/${id(applicationId)}/service-technical-roles/${id(roleId)}/resources/${id(resourceId)}`, { method: "DELETE" });
+export const listApplicationSecurityResources = (applicationId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Resource>>>(`/api/v1/applications/${id(applicationId)}/security/resources${query(params)}`);
+export const decideServiceAccess = (targetApplicationId: string, grantId: string, approve: boolean) =>
+  request<ApiResponse<ServiceAccessGrant>>(`/api/v1/applications/${id(targetApplicationId)}/service-access-requests/${id(grantId)}/decision`, body("POST", { approve }));
+export const revokeServiceAccess = (targetApplicationId: string, grantId: string) =>
+  request<ApiResponse<ServiceAccessGrant>>(`/api/v1/applications/${id(targetApplicationId)}/service-access-requests/${id(grantId)}/revocation`, { method: "POST" });
 export const listResources = (applicationId: string) =>
   request<ApiResponse<Resource[]>>(
     `/api/v1/applications/${id(applicationId)}/resources`,

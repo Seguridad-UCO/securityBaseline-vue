@@ -43,6 +43,34 @@ export interface Application extends ApplicationInput {
 export interface RegisteredApplication extends Application {
   credential: string;
 }
+export interface ServiceIdentity {
+  id: string;
+  consumerApplicationId: string;
+  name: string;
+  clientId: string;
+  status: "ACTIVE" | "SUSPENDED" | "REVOKED";
+  registeredAt: string;
+}
+export interface RegisteredServiceIdentity { identity: ServiceIdentity; clientSecret: string; }
+export interface ServiceAccessGrant {
+  id: string;
+  serviceIdentityId: string;
+  targetApplicationId: string;
+  resourceId: string | null;
+  technicalRoleId: string | null;
+  technicalRole: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+  requestedAt: string;
+  decidedAt: string | null;
+}
+export interface ServiceTechnicalRole {
+  id: string;
+  applicationId: string;
+  code: string;
+  name: string;
+  resourceCount: number;
+  createdAt: string;
+}
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type BulkHttpMethod = HttpMethod | "HEAD" | "OPTIONS";
 export interface BulkResourceRowError { row: number; field: string; value: string; code: string; description: string; }
