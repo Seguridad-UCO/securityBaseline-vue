@@ -86,6 +86,10 @@ withDefaults(defineProps<{ name: string; size?: number }>(), { size: 18 });
     <template v-if="name === 'bolt'">
       <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
     </template>
+    <template v-if="name === 'clock'">
+      <circle cx="12" cy="12" r="9" />
+      <polyline points="12 6 12 12 16 14" />
+    </template>
     <template v-if="name === 'upload'">
       <path d="M12 16V4M7.5 8.5 12 4l4.5 4.5" />
       <path d="M5 14v5h14v-5" />
