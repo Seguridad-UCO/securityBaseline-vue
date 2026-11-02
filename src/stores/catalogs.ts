@@ -1,6 +1,7 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import * as api from "../api";
+import { ApiError } from "../api/client";
 import type {
   ApiResponse,
   Page,
@@ -59,7 +60,13 @@ export const useCatalogsStore = defineStore("catalogs", () => {
           await Promise.all([
             allPages(api.listApplications),
             api.listTenants(),
-            api.listUsers(),
+            // SU-01: el PDP solo entrega el catálogo de usuarios a quien administra alguna aplicación
+            // del inquilino; para el resto un 403 deja la lista vacía en vez de tumbar toda la carga.
+            api.listUsers().catch((reason: unknown) =>
+              reason instanceof ApiError && reason.status === 403
+                ? { data: [] as User[] }
+                : Promise.reject(reason),
+            ),
             allPages(api.listRoles),
             allPages(api.listProfiles),
           ]);
