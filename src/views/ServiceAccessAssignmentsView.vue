@@ -241,7 +241,7 @@ watch(identityId, loadIdentityGrants);
 .assignment-toolbar label, .assignment-filters label { display: grid; gap: 7px; min-width: 260px; color: var(--text); font-size: 12px; font-weight: 600; }
 .assignment-toolbar select, .assignment-filters select, .assignment-filters input { height: 36px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); padding: 0 10px; color: var(--ink); }
 .admin-note { max-width: 42ch; margin: 0; color: var(--text); font-size: 12px; line-height: 1.45; }
-.assignment-filters { align-items: end; padding-top: 0; border-top: 1px solid var(--soft-line); padding-top: 16px; }
+.assignment-filters { align-items: end; border-top: 1px solid var(--soft-line); padding-top: 16px; }
 .assignment-filters label { min-width: 160px; }
 .assignment-filters .search-field { min-width: 260px; }
 .summary { display: flex; align-items: center; gap: 16px; margin-left: auto; color: var(--text); font-size: 11px; white-space: nowrap; }
