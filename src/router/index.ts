@@ -7,7 +7,9 @@ const views = {
   home: () => import("../views/HomeView.vue"),
   applications: () => import("../views/ApplicationsView.vue"),
   resources: () => import("../views/ResourcesView.vue"),
+  bulkLoad: () => import("../views/BulkLoadView.vue"),
   roles: () => import("../views/RolesView.vue"),
+  rolePermissions: () => import("../views/RolePermissionsView.vue"),
   assignments: () => import("../views/AssignmentsView.vue"),
   profiles: () => import("../views/ProfilesView.vue"),
   profileAssignments: () => import("../views/ProfileAssignmentsView.vue"),
@@ -36,6 +38,7 @@ export const router = createRouter({
       component: views[module.id],
       meta: { protected: true },
     })),
+    { path: "/roles/permisos", name: "rolePermissions", component: views.rolePermissions, meta: { protected: true } },
     { path: "/:pathMatch(.*)*", redirect: "/" },
   ],
 });

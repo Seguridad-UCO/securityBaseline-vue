@@ -6,6 +6,7 @@ defineProps<{
   empty: string;
   actionText?: string;
   secondaryActionText?: string;
+  showContentWhenEmpty?: boolean;
 }>();
 defineEmits<{ action: []; secondaryAction: [] }>();
 </script>
@@ -22,7 +23,7 @@ defineEmits<{ action: []; secondaryAction: [] }>();
         <Icon name="plus" :size="15" />{{ actionText }}
       </button></div>
     </header>
-    <slot v-if="count" />
+    <slot v-if="count || showContentWhenEmpty" />
     <div v-else class="empty-state">
       <Icon name="layers" :size="28" /><strong>{{ empty }}</strong
       ><span>Usa la acción principal para comenzar.</span>

@@ -85,6 +85,10 @@ export interface Role {
   tenantId: string | null;
   resourceIds: string[];
 }
+export interface RoleResourcesBatchInput {
+  applicationId: string;
+  resourceIds: string[];
+}
 export interface AssignmentInput {
   userId: string;
   applicationId: string;

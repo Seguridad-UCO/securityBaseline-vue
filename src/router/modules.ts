@@ -26,6 +26,14 @@ export const modules = [
     action: "Registrar recurso",
   },
   {
+    id: "bulkLoad",
+    path: "/carga-masiva",
+    label: "Carga masiva",
+    icon: "upload",
+    title: "Carga masiva",
+    description: "Importa catálogos de seguridad desde archivos Excel",
+  },
+  {
     id: "roles",
     path: "/roles",
     label: "Roles",

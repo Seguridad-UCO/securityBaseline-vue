@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
+import { useRouter } from "vue-router";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
-import { removeRole, revokeResourceFromRole } from "../api";
+import { removeRole } from "../api";
 import type { Role } from "../api/contracts";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
+const router = useRouter();
 const isProtectedRole = (role: Role) =>
   role.name.trim().toUpperCase() === "ADMIN" && Boolean(role.applicationId);
 </script>
@@ -35,12 +37,7 @@ const isProtectedRole = (role: Role) =>
           }}
           autorizado{{ role.resourceIds.length === 1 ? "" : "s" }}
         </p>
-        <div v-if="role.resourceIds.length" class="association-list">
-          <button v-for="resourceId in role.resourceIds" :key="resourceId" class="association-chip" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Retirar recurso'"
-            @click="dialogs.confirm('Retirar recurso', 'El recurso dejará de estar asociado a este rol.', () => revokeResourceFromRole(role.id, resourceId))">
-            {{ catalogs.resources.find((resource) => resource.id === resourceId)?.path || resourceId }} <Icon name="close" :size="12" />
-          </button>
-        </div>
+        <p class="role-context">{{ role.applicationId ? catalogs.appById[role.applicationId]?.name || "Aplicación" : role.tenantId ? "Disponible en las aplicaciones del tenant" : "No administrable desde este catálogo" }}</p>
         <footer>
           <span>{{
             role.applicationId
@@ -49,9 +46,7 @@ const isProtectedRole = (role: Role) =>
                 ? "Alcance de tenant"
                 : "Alcance global"
           }}</span
-          ><button class="grant-action" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Asignar recurso'" @click="dialogs.grant(role)">
-            <Icon name="plus" :size="13" />Recurso
-          </button><button class="grant-action" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Editar rol'" @click="dialogs.editRole(role)">Editar</button><button class="grant-action danger" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Eliminar rol'" @click="dialogs.confirm('Eliminar rol', 'No se puede eliminar si conserva recursos, perfiles o asignaciones activas.', () => removeRole(role.id))">Eliminar</button>
+          ><button class="grant-action" :disabled="isProtectedRole(role) || role.scope === 'GLOBAL'" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : role.scope === 'GLOBAL' ? 'Los roles globales no se administran aquí.' : 'Gestionar permisos'" @click="router.push({ name: 'rolePermissions', query: { roleId: role.id, applicationId: role.applicationId || undefined } })"><Icon name="key" :size="13" />Gestionar permisos</button><button class="grant-action" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Editar rol'" @click="dialogs.editRole(role)">Editar</button><button class="grant-action danger" :disabled="isProtectedRole(role)" :title="isProtectedRole(role) ? 'El ADMIN creado para la aplicación es un rol protegido.' : 'Eliminar rol'" @click="dialogs.confirm('Eliminar rol', 'No se puede eliminar si conserva recursos, perfiles o asignaciones activas.', () => removeRole(role.id))">Eliminar</button>
         </footer>
       </article>
     </div></DataPanel
@@ -59,8 +54,6 @@ const isProtectedRole = (role: Role) =>
 </template>
 
 <style scoped>
-.association-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #6c302f; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
-.association-chip:hover { background: rgba(185,61,60,.1); color: var(--red); }
+.role-context { min-height: 32px; color: var(--faint); font-size: 11px; margin-top: 10px; }
 .danger { color: var(--red); }
 </style>
