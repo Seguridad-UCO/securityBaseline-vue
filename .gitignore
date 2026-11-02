@@ -3,3 +3,6 @@ dist/
 .env.local
 .env.*.local
 *.tsbuildinfo
+
+# macOS
+.DS_Store
