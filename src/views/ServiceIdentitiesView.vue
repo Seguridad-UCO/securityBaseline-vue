@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { createServiceIdentity, listServiceIdentities } from "../api";
+import type { ServiceIdentity } from "../api/contracts";
+import Alert from "../components/Alert.vue";
+import DataPanel from "../components/DataPanel.vue";
+import Icon from "../components/Icon.vue";
+import ServiceIdentityModal from "../components/ServiceIdentityModal.vue";
+import ServiceNavigation from "../components/ServiceNavigation.vue";
+import { useCatalogsStore } from "../stores/catalogs";
+
+const catalogs = useCatalogsStore(), applicationId = ref(""), identities = ref<ServiceIdentity[]>([]), loading = ref(false), error = ref(""), showCreate = ref(false), creating = ref(false), reveal = ref<{ name: string; credential: string } | null>(null);
+const application = computed(() => catalogs.apps.find((app) => app.id === applicationId.value));
+const states: Record<ServiceIdentity["status"], string> = { ACTIVE: "Activa", SUSPENDED: "Suspendida", REVOKED: "Revocada" };
+async function load() { identities.value = []; if (!applicationId.value) return; loading.value = true; error.value = ""; try { identities.value = (await listServiceIdentities(applicationId.value)).data; } catch (cause) { error.value = cause instanceof Error ? cause.message : "No fue posible consultar las identidades."; } finally { loading.value = false; } }
+async function create(name: string) { creating.value = true; error.value = ""; try { const created = (await createServiceIdentity(applicationId.value, name)).data; await load(); showCreate.value = false; reveal.value = { name: created.identity.name, credential: created.clientSecret }; } catch (cause) { error.value = cause instanceof Error ? cause.message : "No fue posible crear la identidad."; } finally { creating.value = false; } }
+async function copySecret() { if (reveal.value) await window.navigator.clipboard.writeText(reveal.value.credential); }
+watch(applicationId, load);
+</script>
+
+<template>
+  <div class="service-identities">
+    <Alert v-if="error" type="error" :message="error" @close="error = ''" />
+    <ServiceNavigation />
+    <DataPanel title="Identidades por aplicación" :count="identities.length" empty="" :show-content-when-empty="true" :eyebrow="null">
+      <div class="identity-toolbar"><label>Aplicación consumidora<select v-model="applicationId"><option value="">Selecciona una aplicación</option><option v-for="app in catalogs.apps" :key="app.id" :value="app.id">{{ app.name }}</option></select></label><button class="create-action" :disabled="!applicationId" @click="showCreate = true"><Icon name="plus" :size="16" />Crear identidad</button></div>
+      <p class="identity-context">Una identidad representa a una aplicación que consume recursos de otra. El secreto se entrega solo durante su creación.</p>
+      <div v-if="loading" class="identity-loading"><span /><span /><span /></div>
+      <div v-else-if="identities.length" class="identity-table"><div class="identity-table-head"><span>Identidad</span><span>Client ID</span><span>Estado</span><span>Creada</span></div><article v-for="identity in identities" :key="identity.id" class="identity-line"><div class="identity-name"><span><Icon name="key" :size="16" /></span><strong>{{ identity.name }}</strong></div><code>{{ identity.clientId }}</code><span :class="['identity-status', identity.status.toLowerCase()]">{{ states[identity.status] }}</span><time>{{ new Date(identity.registeredAt).toLocaleDateString('es-CO', { dateStyle: 'medium' }) }}</time></article></div>
+      <div v-else class="identity-empty"><Icon name="key" :size="24" /><strong>{{ applicationId ? 'Esta aplicación aún no tiene identidades' : 'Elige una aplicación para consultar sus identidades' }}</strong><span v-if="applicationId">Crea la primera identidad para {{ application?.name }}.</span></div>
+    </DataPanel>
+    <ServiceIdentityModal v-if="showCreate" :application-name="application?.name ?? ''" :busy="creating" @close="showCreate = false" @create="create" />
+    <Teleport to="body"><div v-if="reveal" class="credential-popover"><section><button aria-label="Cerrar" @click="reveal = null"><Icon name="close" /></button><span>SECRETO GENERADO</span><h2>{{ reveal.name }}</h2><p>Guárdalo ahora. No volverá a mostrarse.</p><code>{{ reveal.credential }}</code><button class="create-action" @click="copySecret">Copiar secreto</button></section></div></Teleport>
+  </div>
+</template>
+
+<style scoped>
+.service-identities{display:grid;gap:20px}.service-nav{display:flex;gap:2px;border-bottom:1px solid var(--line)}.service-nav a{color:var(--text);padding:0 14px 12px;text-decoration:none;font-size:13px}.service-nav a.active{color:var(--ink);border-bottom:2px solid var(--green);font-weight:600}.identity-toolbar{display:flex;align-items:end;gap:12px;padding:20px 26px 0}label{display:grid;gap:7px;color:var(--text);font-size:12px;font-weight:600;min-width:280px}select{height:36px;border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff;color:var(--ink)}.create-action{height:36px;display:inline-flex;align-items:center;justify-content:center;gap:7px}.identity-context{margin:14px 26px 18px;color:var(--text);font-size:12px}.identity-table{border-top:1px solid var(--soft-line)}.identity-table-head,.identity-line{display:grid;grid-template-columns:1.2fr 1.2fr 110px 130px;gap:16px;align-items:center;padding:14px 26px}.identity-table-head{color:var(--faint);font:10px 'IBM Plex Mono',monospace;letter-spacing:.04em}.identity-line{border-top:1px solid var(--soft-line);font-size:13px}.identity-name{display:flex;gap:10px;align-items:center;min-width:0}.identity-name span{display:grid;place-items:center;width:30px;height:30px;background:var(--green-tint);color:var(--green-ink);border-radius:6px}.identity-name strong,code,time{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.identity-line code,.identity-line time{color:var(--text);font:11px 'IBM Plex Mono',monospace}.identity-status{justify-self:start;padding:3px 7px;border-radius:4px;font:11px 'IBM Plex Mono',monospace}.active{background:var(--green-wash);color:var(--green-ink)}.suspended{background:#fffbeb;color:#6d4c10}.revoked{background:#fdecec;color:var(--red)}.identity-empty{display:grid;justify-items:start;gap:7px;padding:36px 26px;color:var(--text);font-size:13px}.identity-empty svg{color:var(--green)}.identity-empty strong{color:var(--ink)}.identity-loading{display:grid;gap:1px;border-top:1px solid var(--soft-line)}.identity-loading span{height:57px;background:var(--field)}.credential-popover{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:rgba(17,19,18,.38)}.credential-popover section{position:relative;display:grid;gap:12px;width:min(480px,100%);padding:28px;background:#fff;border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.16)}.credential-popover section>button:first-child{position:absolute;right:14px;top:14px;border:0;background:none;color:var(--text)}.credential-popover span{color:var(--green-ink);font:11px 'IBM Plex Mono',monospace}.credential-popover h2,.credential-popover p{margin:0}.credential-popover p{color:var(--text);font-size:13px}.credential-popover code{padding:12px;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:6px;color:var(--ink);white-space:normal}.credential-popover .create-action{justify-self:start;border:0;padding:0 12px;background:var(--ink);color:#fff;border-radius:6px}@media(max-width:720px){.service-nav{overflow:auto}.service-nav a{white-space:nowrap}.identity-toolbar{align-items:stretch;flex-direction:column}.identity-toolbar label{min-width:0}.identity-table-head{display:none}.identity-line{grid-template-columns:1fr auto;gap:8px}.identity-line code,.identity-line time{grid-column:1}.identity-status{grid-column:2;grid-row:1;align-self:center}}
+</style>

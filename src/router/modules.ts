@@ -17,6 +17,14 @@ export const modules = [
     action: "Registrar aplicación",
   },
   {
+    id: "serviceIdentities",
+    path: "/identidades-de-servicio",
+    label: "Identidades de servicio",
+    icon: "key",
+    title: "Identidades de servicio",
+    description: "Credenciales M2M y solicitudes de acceso entre aplicaciones",
+  },
+  {
     id: "resources",
     path: "/recursos",
     label: "Recursos",

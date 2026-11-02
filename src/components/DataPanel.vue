@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import Icon from "./Icon.vue";
-defineProps<{
-  title: string;
-  count: number;
-  empty: string;
-  actionText?: string;
-  secondaryActionText?: string;
-  showContentWhenEmpty?: boolean;
-}>();
+withDefaults(
+  defineProps<{
+    title: string;
+    count: number;
+    empty: string;
+    actionText?: string;
+    secondaryActionText?: string;
+    showContentWhenEmpty?: boolean;
+    eyebrow?: string | null;
+  }>(),
+  { eyebrow: "CATÁLOGO" },
+);
 defineEmits<{ action: []; secondaryAction: [] }>();
 </script>
 <template>
   <section class="data-panel">
     <header>
       <div>
-        <p class="eyebrow">CATÁLOGO</p>
+        <p v-if="eyebrow !== null" class="eyebrow">{{ eyebrow }}</p>
         <h2>
           {{ title }} <b>{{ count }}</b>
         </h2>

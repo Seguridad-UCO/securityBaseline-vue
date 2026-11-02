@@ -94,5 +94,22 @@ withDefaults(defineProps<{ name: string; size?: number }>(), { size: 18 });
       <path d="M12 16V4M7.5 8.5 12 4l4.5 4.5" />
       <path d="M5 14v5h14v-5" />
     </template>
+    <template v-if="name === 'grip'">
+      <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
+    </template>
+    <template v-if="name === 'search'">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </template>
+    <template v-if="name === 'chevron-left'">
+      <path d="m14.5 6-6 6 6 6" />
+    </template>
+    <template v-if="name === 'chevron-right'">
+      <path d="m9.5 6 6 6-6 6" />
+    </template>
+    <template v-if="name === 'copy'">
+      <rect x="8" y="8" width="11" height="11" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </template>
   </svg>
 </template>
