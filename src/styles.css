@@ -101,7 +101,7 @@ button:disabled {
     margin: 55px 10px 11px;
     font: 10px 'IBM Plex Mono', monospace;
     letter-spacing: .12em;
-    color: #819188
+    color: #5c6b61
 }
 
 .console-sidebar nav {
@@ -130,7 +130,7 @@ button:disabled {
 }
 
 .side-link.selected {
-    background: var(--green);
+    background: #01884f;
     color: #fff;
     font-weight: 600
 }
@@ -145,7 +145,7 @@ button:disabled {
     margin-top: auto;
     border-top: 1px solid rgba(1, 139, 81, .16);
     padding: 14px 10px 0;
-    color: #60796a;
+    color: #4f6657;
     font-size: 11px;
     line-height: 1.9
 }
@@ -186,7 +186,7 @@ button:disabled {
 .eyebrow {
     font: 500 10px 'IBM Plex Mono', monospace;
     letter-spacing: .12em;
-    color: var(--faint)
+    color: var(--text)
 }
 
 .breadcrumb span {
