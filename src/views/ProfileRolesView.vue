@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { addProfileRolesBatch, syncProfileRoles } from "../api";
+import { addProfileRolesBatch, listRoles, syncProfileRoles } from "../api";
 import type { Profile, Role } from "../api/contracts";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
@@ -15,9 +15,12 @@ const page = ref(1), selected = ref(new Set<string>());
 const draggingId = ref<string | null>(null), dragOver = ref<"available" | "assigned" | null>(null);
 const { busy, error, run } = useMutation();
 const pageSize = ref(20);
+const serverRoles = ref<Role[]>([]);
 const profile = computed<Profile | undefined>(() => catalogs.profiles.find(item => item.id === profileId.value));
 const savedRoleIds = computed(() => new Set(profile.value?.roleIds || []));
-const compatibleRoles = computed(() => catalogs.roles.filter(role => role.scope !== "GLOBAL" &&
+const hasChanges = computed(() => selected.value.size !== savedRoleIds.value.size
+  || [...selected.value].some(id => !savedRoleIds.value.has(id)));
+const compatibleRoles = computed(() => (serverRoles.value.length ? serverRoles.value : catalogs.roles).filter(role => role.scope !== "GLOBAL" &&
   (profile.value?.scope === "TENANT"
     ? role.scope === "TENANT"
     : role.scope === "TENANT" || role.applicationId === profile.value?.applicationId)));
@@ -58,6 +61,7 @@ async function save() {
 }
 watch([profileId, mode], () => { page.value = 1; reset(); });
 watch([query, scope], () => page.value = 1);
+watch([query, scope], async () => { const response = await listRoles({ offset: 0, limit: 100, query: query.value, scope: scope.value }); serverRoles.value = response.data.content; }, { immediate: true });
 watch(pageSize, () => page.value = 1);
 watch(totalPages, () => { if (page.value > totalPages.value) page.value = totalPages.value; });
 watch(() => catalogs.profiles, profiles => { if (!profiles.some(item => item.id === profileId.value)) profileId.value = profiles[0]?.id || ""; }, { immediate: true });
@@ -95,7 +99,7 @@ watch(() => catalogs.profiles, profiles => { if (!profiles.some(item => item.id 
         </section>
       </div>
     </div>
-    <footer class="profile-footer"><span>{{ availableRoles.length }} roles · {{ selected.size }} seleccionados</span><div class="pagination"><label>Mostrar <select v-model.number="pageSize"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option><option :value="100">100</option></select></label><button :disabled="page===1" @click="page--">Anterior</button><span>Página {{ page }} de {{ totalPages }}</span><button :disabled="page===totalPages" @click="page++">Siguiente</button></div><button class="create-action save-action" :disabled="busy || !profileId || (mode === 'add' && !selected.size)" @click="save"><Icon name="check" :size="15" />{{ busy ? 'Guardando…' : mode === 'add' ? 'Agregar seleccionados' : 'Guardar roles' }}</button></footer>
+    <footer class="profile-footer"><span>{{ availableRoles.length }} roles · {{ selected.size }} seleccionados</span><div class="pagination"><label>Mostrar <select v-model.number="pageSize"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option><option :value="100">100</option></select></label><button :disabled="page===1" @click="page--">Anterior</button><span>Página {{ page }} de {{ totalPages }}</span><button :disabled="page===totalPages" @click="page++">Siguiente</button></div><button class="create-action save-action" :disabled="busy || !profileId || !hasChanges" @click="save"><Icon name="check" :size="15" />{{ busy ? 'Guardando…' : mode === 'add' ? 'Agregar seleccionados' : 'Guardar roles' }}</button></footer>
   </DataPanel>
 </template>
 <style scoped>

@@ -15,6 +15,7 @@ async function load() { const response = await listProfiles({ offset: page.value
 watch(query, () => { page.value = 0; void load(); });
 watch(page, () => void load(), { immediate: true });
 watch(limit, () => { page.value = 0; void load(); });
+watch(() => catalogs.profiles, () => void load());
 const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
   profile.roleIds.length > 0 || catalogs.profileAssignments.some(
     (assignment) => assignment.profileId === profile.id && (!assignment.validUntil || new Date(assignment.validUntil) > new Date()),

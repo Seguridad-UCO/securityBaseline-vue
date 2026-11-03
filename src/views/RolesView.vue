@@ -16,6 +16,7 @@ async function load() { const response = await listRoles({ offset: page.value * 
 watch(query, () => { page.value = 0; void load(); });
 watch(page, () => void load(), { immediate: true });
 watch(limit, () => { page.value = 0; void load(); });
+watch(() => catalogs.roles, () => void load());
 const isProtectedRole = (role: Role) =>
   role.name.trim().toUpperCase() === "ADMIN" && Boolean(role.applicationId);
 </script>

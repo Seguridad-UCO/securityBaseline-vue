@@ -151,7 +151,7 @@ function clearFilters() {
 }
 async function loadResources() {
   if (!applicationId.value) { pagedResources.value = []; resourcesTotal.value = 0; return; }
-  const response = await listApplicationSecurityResources(applicationId.value, { offset: resourcesPage.value * pageSize.value, limit: pageSize.value, query: query.value });
+  const response = await listApplicationSecurityResources(applicationId.value, { offset: resourcesPage.value * pageSize.value, limit: pageSize.value, query: query.value, method: method.value });
   pagedResources.value = response.data.content;
   resourcesTotal.value = response.data.total;
 }
@@ -183,7 +183,7 @@ watch(availableRoles, (roles) => {
   if (!roles.some((item) => item.id === roleId.value)) roleId.value = roles[0]!.id;
 }, { immediate: true });
 watch([applicationId, roleId], resetSelection, { immediate: true });
-watch([applicationId, query], () => { resourcesPage.value = 0; void loadResources(); }, { immediate: true });
+watch([applicationId, query, method], () => { resourcesPage.value = 0; void loadResources(); }, { immediate: true });
 watch(resourcesPage, () => void loadResources());
 watch(pageSize, () => { resourcesPage.value = 0; void loadResources(); });
 // Si los catálogos terminan de cargar (o cambian fuera de esta vista) sin ediciones
