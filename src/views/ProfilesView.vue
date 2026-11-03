@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
+import { useRouter } from "vue-router";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
-import { removeProfile, removeRoleFromProfile } from "../api";
+import { removeProfile } from "../api";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
+const router = useRouter();
 const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
   profile.roleIds.length > 0 || catalogs.profileAssignments.some(
     (assignment) => assignment.profileId === profile.id && (!assignment.validUntil || new Date(assignment.validUntil) > new Date()),
@@ -40,12 +42,7 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
           }}
           agrupado{{ profile.roleIds.length === 1 ? "" : "s" }}
         </p>
-        <div v-if="profile.roleIds.length" class="association-list">
-          <button v-for="roleId in profile.roleIds" :key="roleId" class="association-chip"
-            @click="dialogs.confirm('Retirar rol', 'El rol dejará de pertenecer a este perfil.', () => removeRoleFromProfile(profile.id, roleId))">
-            {{ catalogs.roles.find((role) => role.id === roleId)?.name || "Rol sin nombre" }} <Icon name="close" :size="12" />
-          </button>
-        </div>
+        <p class="role-context">{{ profile.applicationId ? catalogs.appById[profile.applicationId]?.name || "Aplicación" : profile.tenantId ? "Disponible en el tenant" : "No administrable desde este catálogo" }}</p>
         <footer>
           <span>{{
             profile.applicationId
@@ -54,12 +51,7 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
                 ? "Alcance de tenant"
                 : "Alcance global"
           }}</span
-          ><button
-            class="grant-action"
-            @click="dialogs.grantProfile(profile)"
-          >
-            <Icon name="plus" :size="13" />Rol
-          </button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" :disabled="profileHasAssociations(profile)" :title="profileHasAssociations(profile) ? 'Retira primero los roles y las asignaciones activas.' : 'Eliminar perfil'" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
+          ><button class="grant-action" :disabled="profile.scope === 'GLOBAL'" @click="router.push({ name: 'profileRoles', query: { profileId: profile.id } })"><Icon name="layers" :size="13" />Gestionar roles</button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" :disabled="profileHasAssociations(profile)" :title="profileHasAssociations(profile) ? 'Retira primero los roles y las asignaciones activas.' : 'Eliminar perfil'" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
         </footer>
       </article>
     </div></DataPanel
@@ -67,8 +59,6 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
 </template>
 
 <style scoped>
-.association-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #6c302f; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
-.association-chip:hover { background: rgba(185,61,60,.1); color: var(--red); }
+.role-context { min-height: 32px; color: var(--faint); font-size: 11px; margin-top: 10px; }
 .danger { color: var(--red); }
 </style>

@@ -158,6 +158,7 @@ export interface Profile {
   tenantId: string | null;
   roleIds: string[];
 }
+export interface ProfileRolesBatchInput { roleIds: string[]; }
 export interface ProfileAssignmentInput {
   userId: string;
   applicationId: string;
