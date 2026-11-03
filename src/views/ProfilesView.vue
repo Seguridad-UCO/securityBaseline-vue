@@ -42,7 +42,7 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
           }}
           agrupado{{ profile.roleIds.length === 1 ? "" : "s" }}
         </p>
-        <p class="profile-context">{{ profile.applicationId ? catalogs.appById[profile.applicationId]?.name || "Aplicación" : profile.tenantId ? "Disponible en el tenant" : "No administrable desde este catálogo" }}</p>
+        <p class="role-context">{{ profile.applicationId ? catalogs.appById[profile.applicationId]?.name || "Aplicación" : profile.tenantId ? "Disponible en el tenant" : "No administrable desde este catálogo" }}</p>
         <footer>
           <span>{{
             profile.applicationId
@@ -59,6 +59,6 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
 </template>
 
 <style scoped>
-.profile-context { min-height:32px; margin-top:10px; color:var(--faint); font-size:11px; }
+.role-context { min-height: 32px; color: var(--faint); font-size: 11px; margin-top: 10px; }
 .danger { color: var(--red); }
 </style>
