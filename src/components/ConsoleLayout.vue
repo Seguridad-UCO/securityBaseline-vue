@@ -32,7 +32,7 @@ const credentialRotationFor = ref<Application | null>(null);
 const confirmation = ref<{ title: string; description: string; action: () => Promise<unknown> } | null>(null);
 const current = computed(
   () => {
-    const moduleId = route.name === "rolePermissions" ? "roles" : route.meta.moduleId ?? route.name;
+    const moduleId = route.name === "rolePermissions" ? "roles" : route.name === "profileRoles" ? "profiles" : route.meta.moduleId ?? route.name;
     const module = modules.find((item) => item.id === moduleId) ?? modules[0];
     return {
       ...module,

@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { useCatalogsStore } from "../stores/catalogs";
 import { useDialogs } from "../composables/useDialogs";
+import { useRouter } from "vue-router";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
-import { removeProfile, removeRoleFromProfile } from "../api";
+import { listProfiles, removeProfile } from "../api";
+import { ref, watch } from "vue";
 const catalogs = useCatalogsStore(),
   dialogs = useDialogs();
+const router = useRouter();
+const query = ref(""), page = ref(0), total = ref(0), profiles = ref<import("../api/contracts").Profile[]>([]);
+const limit = ref(20);
+async function load() { const response = await listProfiles({ offset: page.value * limit.value, limit: limit.value, query: query.value }); profiles.value = response.data.content; total.value = response.data.total; }
+watch(query, () => { page.value = 0; void load(); });
+watch(page, () => void load(), { immediate: true });
+watch(limit, () => { page.value = 0; void load(); });
+watch(() => catalogs.profiles, () => void load());
 const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
   profile.roleIds.length > 0 || catalogs.profileAssignments.some(
     (assignment) => assignment.profileId === profile.id && (!assignment.validUntil || new Date(assignment.validUntil) > new Date()),
@@ -14,13 +24,13 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
 <template>
   <DataPanel
     title="Perfiles definidos"
-    :count="catalogs.profiles.length"
+    :count="total"
     empty="Define el primer perfil del catálogo."
     action-text="Definir perfil"
     @action="dialogs.open('profile')"
-    ><div class="role-grid">
+    ><div class="catalog-toolbar"><label class="catalog-search"><Icon name="search" :size="16" /><input v-model.trim="query" type="search" placeholder="Buscar perfiles" aria-label="Buscar perfiles" /></label></div><div class="role-grid">
       <article
-        v-for="profile in catalogs.profiles"
+        v-for="profile in profiles"
         :key="profile.id"
         class="role-card"
       >
@@ -40,12 +50,7 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
           }}
           agrupado{{ profile.roleIds.length === 1 ? "" : "s" }}
         </p>
-        <div v-if="profile.roleIds.length" class="association-list">
-          <button v-for="roleId in profile.roleIds" :key="roleId" class="association-chip"
-            @click="dialogs.confirm('Retirar rol', 'El rol dejará de pertenecer a este perfil.', () => removeRoleFromProfile(profile.id, roleId))">
-            {{ catalogs.roles.find((role) => role.id === roleId)?.name || "Rol sin nombre" }} <Icon name="close" :size="12" />
-          </button>
-        </div>
+        <p class="role-context">{{ profile.applicationId ? catalogs.appById[profile.applicationId]?.name || "Aplicación" : profile.tenantId ? "Disponible en el tenant" : "No administrable desde este catálogo" }}</p>
         <footer>
           <span>{{
             profile.applicationId
@@ -54,21 +59,15 @@ const profileHasAssociations = (profile: { id: string; roleIds: string[] }) =>
                 ? "Alcance de tenant"
                 : "Alcance global"
           }}</span
-          ><button
-            class="grant-action"
-            @click="dialogs.grantProfile(profile)"
-          >
-            <Icon name="plus" :size="13" />Rol
-          </button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" :disabled="profileHasAssociations(profile)" :title="profileHasAssociations(profile) ? 'Retira primero los roles y las asignaciones activas.' : 'Eliminar perfil'" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
+          ><button class="grant-action" :disabled="profile.scope === 'GLOBAL'" @click="router.push({ name: 'profileRoles', query: { profileId: profile.id } })"><Icon name="layers" :size="13" />Gestionar roles</button><button class="grant-action" @click="dialogs.editProfile(profile)">Editar</button><button class="grant-action danger" :disabled="profileHasAssociations(profile)" :title="profileHasAssociations(profile) ? 'Retira primero los roles y las asignaciones activas.' : 'Eliminar perfil'" @click="dialogs.confirm('Eliminar perfil', 'No se puede eliminar si conserva roles o asignaciones activas.', () => removeProfile(profile.id))">Eliminar</button>
         </footer>
       </article>
-    </div></DataPanel
+    </div><footer class="catalog-footer"><span>{{ total }} perfiles</span><nav class="catalog-pagination" aria-label="Paginación de perfiles"><label>Mostrar <select v-model.number="limit"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option><option :value="100">100</option></select></label><button type="button" :disabled="page === 0" @click="page--">Anterior</button><span>Página <b>{{ page + 1 }}</b> de {{ Math.max(1, Math.ceil(total / limit)) }}</span><button type="button" :disabled="(page + 1) * limit >= total" @click="page++">Siguiente</button></nav></footer></DataPanel
   >
 </template>
 
 <style scoped>
-.association-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-.association-chip { border: 1px solid rgba(185,61,60,.2); background: rgba(185,61,60,.04); color: #6c302f; border-radius: 999px; padding: 4px 7px; font: 10px 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; }
-.association-chip:hover { background: rgba(185,61,60,.1); color: var(--red); }
+.role-context { min-height: 32px; color: var(--faint); font-size: 11px; margin-top: 10px; }
 .danger { color: var(--red); }
+.catalog-toolbar { display:flex; align-items:center; padding:0 26px 16px; }.catalog-search { display:flex; flex:1 1 280px; align-items:center; gap:8px; max-width:375px; height:40px; padding:0 11px; border:1px solid var(--line); border-radius:7px; background:var(--field); }.catalog-search:focus-within { border-color:var(--green); background:var(--paper); box-shadow:0 0 0 3px rgba(1,139,81,.14); }.catalog-search svg { color:var(--green); }.catalog-search input { flex:1; min-width:0; height:38px; border:0; outline:0; background:transparent; color:var(--ink); font-size:13px; }.catalog-footer { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; padding:15px 26px; border-top:1px solid var(--soft-line); background:var(--field); color:var(--text); font-size:11px; }.catalog-pagination { grid-column:2; display:flex; align-items:center; gap:10px; color:var(--text); font-size:11px; white-space:nowrap; }.catalog-pagination label { display:flex; align-items:center; gap:5px; }.catalog-pagination select { height:28px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--ink); font-size:11px; }.catalog-pagination span { text-align:center; }.catalog-pagination b { color:var(--ink); }.catalog-pagination button { padding:5px 8px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--text); font-size:11px; cursor:pointer; }.catalog-pagination button:hover:not(:disabled) { border-color:var(--green); color:var(--green-ink); }.catalog-pagination button:disabled { cursor:not-allowed; opacity:.42; }
 </style>
