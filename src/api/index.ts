@@ -104,6 +104,14 @@ export const removeServiceTechnicalRoleResource = (applicationId: string, roleId
   request<null>(`/api/v1/applications/${id(applicationId)}/service-technical-roles/${id(roleId)}/resources/${id(resourceId)}`, { method: "DELETE" });
 export const listApplicationSecurityResources = (applicationId: string, params?: PageParams) =>
   request<ApiResponse<Page<Resource>>>(`/api/v1/applications/${id(applicationId)}/security/resources${query(params)}`);
+export const listApplicationSecurityRoles = (applicationId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Role>>>(`/api/v1/applications/${id(applicationId)}/security/roles${query(params)}`);
+export const listApplicationSecurityProfiles = (applicationId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Profile>>>(`/api/v1/applications/${id(applicationId)}/security/profiles${query(params)}`);
+export const listApplicationSecurityRoleResources = (applicationId: string, roleId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Resource>>>(`/api/v1/applications/${id(applicationId)}/security/roles/${id(roleId)}/resources${query(params)}`);
+export const listApplicationSecurityProfileRoles = (applicationId: string, profileId: string, params?: PageParams) =>
+  request<ApiResponse<Page<Role>>>(`/api/v1/applications/${id(applicationId)}/security/profiles/${id(profileId)}/roles${query(params)}`);
 export const decideServiceAccess = (targetApplicationId: string, grantId: string, approve: boolean) =>
   request<ApiResponse<ServiceAccessGrant>>(`/api/v1/applications/${id(targetApplicationId)}/service-access-requests/${id(grantId)}/decision`, body("POST", { approve }));
 export const revokeServiceAccess = (targetApplicationId: string, grantId: string) =>

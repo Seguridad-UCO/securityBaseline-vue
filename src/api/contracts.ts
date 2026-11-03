@@ -19,6 +19,9 @@ export interface PageParams {
   offset?: number;
   limit?: number;
   name?: string;
+  query?: string;
+  method?: string;
+  scope?: string;
 }
 export interface Session {
   subject: string;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { syncRoleResources } from "../api";
+import { listApplicationSecurityResources, syncRoleResources } from "../api";
 import type { HttpMethod, Resource, Role } from "../api/contracts";
 import DataPanel from "../components/DataPanel.vue";
 import Icon from "../components/Icon.vue";
@@ -14,6 +14,8 @@ const route = useRoute(), router = useRouter();
 const applicationId = ref(String(route.query.applicationId || ""));
 const roleId = ref(String(route.query.roleId || ""));
 const query = ref(""), method = ref<"" | HttpMethod>("");
+const resourcesPage = ref(0), resourcesTotal = ref(0), pagedResources = ref<Resource[]>([]);
+const pageSize = ref(20);
 const selected = ref(new Set<string>());
 const touched = ref(false);
 const justSaved = ref(false);
@@ -31,9 +33,9 @@ const availableRoles = computed(() => catalogs.roles.filter((role) =>
 ));
 const role = computed<Role | undefined>(() => catalogs.roles.find((item) => item.id === roleId.value));
 const protectedRole = computed(() => role.value?.name.trim().toUpperCase() === "ADMIN" && Boolean(role.value.applicationId));
-const applicationResources = computed(() => catalogs.resources.filter((resource) => resource.applicationId === applicationId.value));
+const applicationResources = computed(() => pagedResources.value);
 // Lo que ya está guardado en el rol para esta aplicación. `selected` es el borrador.
-const granted = computed(() => new Set(applicationResources.value.filter((resource) => role.value?.resourceIds.includes(resource.id)).map((resource) => resource.id)));
+const granted = computed(() => new Set(role.value?.resourceIds || []));
 const sortedResources = computed(() => applicationResources.value
   .slice()
   .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method)));
@@ -45,8 +47,8 @@ const availableResources = computed(() => sortedResources.value.filter((resource
 const assignedResources = computed(() => sortedResources.value.filter((resource) => selected.value.has(resource.id) && matchesFilters(resource)));
 const hasFilters = computed(() => Boolean(query.value || method.value));
 const scopeLabel = computed(() => role.value?.scope === "TENANT" ? "Tenant" : "Aplicación");
-const assignedCount = computed(() => applicationResources.value.reduce((total, resource) => selected.value.has(resource.id) ? total + 1 : total, 0));
-const coverage = computed(() => applicationResources.value.length ? Math.round((assignedCount.value / applicationResources.value.length) * 100) : 0);
+const assignedCount = computed(() => selected.value.size);
+const coverage = computed(() => resourcesTotal.value ? Math.round((assignedCount.value / resourcesTotal.value) * 100) : 0);
 // Guardar solo tiene sentido si el borrador difiere de lo que ya está concedido.
 const dirty = computed(() => {
   if (selected.value.size !== granted.value.size) return true;
@@ -147,6 +149,12 @@ function clearFilters() {
   query.value = "";
   method.value = "";
 }
+async function loadResources() {
+  if (!applicationId.value) { pagedResources.value = []; resourcesTotal.value = 0; return; }
+  const response = await listApplicationSecurityResources(applicationId.value, { offset: resourcesPage.value * pageSize.value, limit: pageSize.value, query: query.value, method: method.value });
+  pagedResources.value = response.data.content;
+  resourcesTotal.value = response.data.total;
+}
 async function save() {
   if (!role.value || !applicationId.value || protectedRole.value || !dirty.value) return;
   const data = { applicationId: applicationId.value, resourceIds: [...selected.value] };
@@ -175,6 +183,9 @@ watch(availableRoles, (roles) => {
   if (!roles.some((item) => item.id === roleId.value)) roleId.value = roles[0]!.id;
 }, { immediate: true });
 watch([applicationId, roleId], resetSelection, { immediate: true });
+watch([applicationId, query, method], () => { resourcesPage.value = 0; void loadResources(); }, { immediate: true });
+watch(resourcesPage, () => void loadResources());
+watch(pageSize, () => { resourcesPage.value = 0; void loadResources(); });
 // Si los catálogos terminan de cargar (o cambian fuera de esta vista) sin ediciones
 // pendientes, el borrador sigue el estado guardado en lugar de quedarse vacío.
 watch(granted, () => {
@@ -185,7 +196,7 @@ watch(granted, () => {
 <template>
   <DataPanel
     title="Permisos del rol"
-    :count="applicationResources.length"
+    :count="resourcesTotal"
     empty="Esta aplicación aún no tiene recursos. Regístralos primero en Recursos."
     show-content-when-empty
   >
@@ -211,13 +222,13 @@ watch(granted, () => {
         <div v-if="role" class="perm-role-card">
           <div class="perm-role-top">
             <span :class="['scope-pill', `scope-${role.scope.toLowerCase()}`]"><Icon name="key" :size="12" />{{ scopeLabel }}</span>
-            <span class="perm-coverage">{{ assignedCount }}/{{ applicationResources.length }}</span>
+            <span class="perm-coverage">{{ assignedCount }}/{{ resourcesTotal }}</span>
           </div>
           <strong class="perm-role-name" :title="role.name">{{ role.name }}</strong>
           <div class="perm-meter" role="progressbar" :aria-valuenow="coverage" aria-valuemin="0" aria-valuemax="100" :aria-label="`Cobertura de recursos del rol ${role.name}`">
             <i :style="{ width: `${coverage}%` }" />
           </div>
-          <small>{{ assignedCount }} de {{ applicationResources.length }} recursos con acceso</small>
+          <small>{{ assignedCount }} de {{ resourcesTotal }} recursos con acceso</small>
         </div>
       </div>
     </div>
@@ -354,10 +365,10 @@ watch(granted, () => {
             <span v-if="removed" class="perm-delta remove">−{{ removed }} por retirar</span>
           </small>
           <small v-else-if="justSaved">Los permisos vigentes ya reflejan tu selección.</small>
-          <small v-else>{{ assignedCount }} de {{ applicationResources.length }} recursos con acceso en esta aplicación.</small>
+          <small v-else>{{ assignedCount }} de {{ resourcesTotal }} recursos con acceso en esta aplicación.</small>
         </div>
       </div>
-      <div class="perm-footer-actions">
+      <nav class="perm-pagination" aria-label="Paginación de recursos"><label>Mostrar <select v-model.number="pageSize"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option><option :value="100">100</option></select></label><button type="button" :disabled="resourcesPage === 0" @click="resourcesPage--">Anterior</button><span>Página <b>{{ resourcesPage + 1 }}</b> de {{ Math.max(1, Math.ceil(resourcesTotal / pageSize)) }}</span><button type="button" :disabled="(resourcesPage + 1) * pageSize >= resourcesTotal" @click="resourcesPage++">Siguiente</button></nav><div class="perm-footer-actions">
         <button class="cancel perm-discard" type="button" :disabled="!dirty || busy" @click="resetSelection"><Icon name="undo" :size="14" />Descartar</button>
         <button class="create-action perm-save" type="button" :disabled="busy || !roleId || !applicationId || protectedRole || !dirty" @click="save"><Icon name="check" :size="15" />{{ busy ? 'Guardando…' : 'Guardar cambios' }}</button>
       </div>
@@ -406,6 +417,8 @@ watch(granted, () => {
 .perm-chips button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
 .perm-clear-filters { margin-left: auto; padding: 0; border: 0; background: transparent; color: var(--green-ink); font-size: 11px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .perm-clear-filters:hover { color: var(--green); }
+.perm-pagination { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 11px; white-space: nowrap; }
+.perm-pagination label { display:flex; align-items:center; gap:5px; }.perm-pagination select { height:28px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--ink); font-size:11px; }.perm-pagination span { text-align: center; color: var(--text); }.perm-pagination b { color: var(--ink); }.perm-pagination button { padding:5px 8px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--text); font-size:11px; cursor:pointer; }.perm-pagination button:hover:not(:disabled) { border-color:var(--green); color:var(--green-ink); }.perm-pagination button:disabled { cursor: not-allowed; opacity: .42; }
 .perm-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: stretch; }
 .perm-column { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); overflow: hidden; transition: border-color .16s ease, box-shadow .16s ease; }
 .perm-column.drop-active { border-color: var(--green); box-shadow: 0 0 0 3px rgba(1, 139, 81, .1); }
@@ -474,6 +487,7 @@ watch(granted, () => {
   .perm-role-card { grid-column: auto; }
   .perm-search { max-width: none; }
   .perm-clear-filters { margin-left: 0; }
+  .perm-pagination { margin-left: 0; }
   .perm-card { grid-template-columns: 58px minmax(0, 1fr) 30px; }
   .perm-grip, .perm-tag { display: none; }
   .perm-footer { align-items: flex-start; }
