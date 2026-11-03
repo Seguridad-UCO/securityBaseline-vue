@@ -31,7 +31,15 @@ const credentialReveal = ref<{ name: string; credential: string } | null>(
 const credentialRotationFor = ref<Application | null>(null);
 const confirmation = ref<{ title: string; description: string; action: () => Promise<unknown> } | null>(null);
 const current = computed(
-  () => route.name === "rolePermissions" ? modules.find((module) => module.id === "roles")! : route.name === "profileRoles" ? modules.find((module) => module.id === "profiles")! : modules.find((module) => module.id === route.name) ?? modules[0],
+  () => {
+    const moduleId = route.name === "rolePermissions" ? "roles" : route.name === "profileRoles" ? "profiles" : route.meta.moduleId ?? route.name;
+    const module = modules.find((item) => item.id === moduleId) ?? modules[0];
+    return {
+      ...module,
+      title: typeof route.meta.title === "string" ? route.meta.title : module.title,
+      description: typeof route.meta.description === "string" ? route.meta.description : module.description,
+    };
+  },
 );
 function open(kind: DialogKind) {
   if (kind === "resource" && !catalogs.apps.length) {
@@ -161,7 +169,7 @@ watch(() => route.path, close);
         />
         <section v-if="current.id !== 'authorize'" class="module-heading">
           <div>
-            <p class="eyebrow">{{ current.title }}</p>
+            <p v-if="current.id !== 'serviceIdentities'" class="eyebrow">{{ current.title }}</p>
             <h1>{{ current.title }}</h1>
             <p>{{ current.description }}</p>
           </div>

@@ -110,5 +110,15 @@ withDefaults(defineProps<{ name: string; size?: number }>(), { size: 18 });
       <path d="M9 7 4 12l5 5" />
       <path d="M4 12h9a5 5 0 0 1 5 5v2" />
     </template>
+    <template v-if="name === 'chevron-left'">
+      <path d="m14.5 6-6 6 6 6" />
+    </template>
+    <template v-if="name === 'chevron-right'">
+      <path d="m9.5 6 6 6-6 6" />
+    </template>
+    <template v-if="name === 'copy'">
+      <rect x="8" y="8" width="11" height="11" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </template>
   </svg>
 </template>
