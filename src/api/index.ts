@@ -131,11 +131,13 @@ export const removeResource = (applicationId: string, resourceId: string) =>
   request<null>(`/api/v1/applications/${id(applicationId)}/resources/${id(resourceId)}`, { method: "DELETE" });
 const bulkBody = (file: File) => { const data = new FormData(); data.append("file", file); return { method: "POST", body: data }; };
 export const downloadBulkResourceTemplate = (format: "xlsx" | "xls") => requestBlob(`/api/v1/resources/bulk/template?format=${format}`);
-export const downloadBulkCatalogTemplate = (mode: "resourcesRoles" | "roles" | "profiles") =>
-  requestBlob(`/api/v1/resources/bulk/catalog-template/${mode === "resourcesRoles" ? "resources-roles" : mode}`);
-export const validateBulkCatalog = (mode: "roles" | "profiles", file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${mode}/validate`, bulkBody(file));
-export const importBulkCatalog = (mode: "roles" | "profiles", file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${mode}`, bulkBody(file));
-export const downloadBulkCatalogErrorReport = (mode: "roles" | "profiles", file: File) => requestBlob(`/api/v1/resources/bulk/catalog/${mode}/error-report`, bulkBody(file));
+export type BulkCatalogMode = "resourcesRoles" | "roles" | "profiles";
+const catalogMode = (mode: BulkCatalogMode) => (mode === "resourcesRoles" ? "resources-roles" : mode);
+export const downloadBulkCatalogTemplate = (mode: BulkCatalogMode) =>
+  requestBlob(`/api/v1/resources/bulk/catalog-template/${catalogMode(mode)}`);
+export const validateBulkCatalog = (mode: BulkCatalogMode, file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${catalogMode(mode)}/validate`, bulkBody(file));
+export const importBulkCatalog = (mode: BulkCatalogMode, file: File) => request<ApiResponse<BulkResourceValidation>>(`/api/v1/resources/bulk/catalog/${catalogMode(mode)}`, bulkBody(file));
+export const downloadBulkCatalogErrorReport = (mode: BulkCatalogMode, file: File) => requestBlob(`/api/v1/resources/bulk/catalog/${catalogMode(mode)}/error-report`, bulkBody(file));
 export const validateBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk/validate", bulkBody(file));
 export const importBulkResources = (file: File) => request<ApiResponse<BulkResourceValidation>>("/api/v1/resources/bulk", bulkBody(file));
 export const downloadBulkResourceErrorReport = (file: File) => requestBlob("/api/v1/resources/bulk/error-report", bulkBody(file));
